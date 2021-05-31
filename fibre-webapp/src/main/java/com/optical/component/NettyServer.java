@@ -1,13 +1,13 @@
 package com.optical.component;
 
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.EventLoopGroup;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.ibatis.annotations.Mapper;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Component;
 
 import java.net.InetSocketAddress;
 import java.util.Map;
@@ -15,13 +15,14 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * @author Gjing
+ * @author
  * <p>
  * 服务启动监听器
  **/
 @Slf4j
+@Mapper
 public class NettyServer {
-    private final BlockingQueue<String> list;
+    private  final BlockingQueue<String> list;
     //队列大小，先这么丑陋的写一下
     private final int maxSize;
     public NettyServer(BlockingQueue list, int maxSize) {
@@ -31,6 +32,7 @@ public class NettyServer {
 
     private static Map<String, Channel> map = new ConcurrentHashMap<String, Channel>();
     private static Map<String, String> messageMap = new ConcurrentHashMap<String, String>();
+    public static Map<String, ChannelHandlerContext> ctxMap = new ConcurrentHashMap<String, ChannelHandlerContext>(16);
 //    private static Map<String, byte[]> messageMap = new ConcurrentHashMap<String, byte[]>();
 
     public static Map<String, Channel> getMap() {
@@ -47,6 +49,14 @@ public class NettyServer {
 
     public static void setMessageMap(Map<String, String> messageMap) {
         NettyServer.messageMap = messageMap;
+    }
+
+    public static Map<String, ChannelHandlerContext> getCtxMap() {
+        return ctxMap;
+    }
+
+    public static void setCtxMap(Map<String, ChannelHandlerContext> ctxMap) {
+        NettyServer.ctxMap = ctxMap;
     }
 
     public void start(InetSocketAddress socketAddress) {

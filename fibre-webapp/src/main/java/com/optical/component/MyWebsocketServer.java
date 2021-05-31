@@ -110,7 +110,7 @@ public class MyWebsocketServer {
      * 群发自定义消息
      * */
     public static void sendInfo(String message,@PathParam("sid") String sid) throws Exception {
-        log.info("推送消息到窗口"+sid+"，推送内容:"+message);
+//        log.info("推送消息到窗口"+sid+"，推送内容:"+message);
         for (MyWebsocketServer item : webSocketSet) {
             try {
                 //这里可以设定只推送给这个sid的，为null则全部推送

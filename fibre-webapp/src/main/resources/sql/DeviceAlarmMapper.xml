@@ -1,0 +1,450 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.optical.mapper.DeviceAlarmMapper">
+  <resultMap id="BaseResultMap" type="com.optical.bean.DeviceAlarm">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="device_code" jdbcType="VARCHAR" property="deviceCode" />
+    <result column="type" jdbcType="INTEGER" property="type" />
+    <result column="confidence" jdbcType="INTEGER" property="confidence" />
+    <result column="reason" jdbcType="INTEGER" property="reason" />
+    <result column="frame_id" jdbcType="BIGINT" property="frameId" />
+    <result column="event_start_frame" jdbcType="BIGINT" property="eventStartFrame" />
+    <result column="event_end_frame" jdbcType="BIGINT" property="eventEndFrame" />
+    <result column="height_curr" jdbcType="DOUBLE" property="heightCurr" />
+    <result column="height_before" jdbcType="DOUBLE" property="heightBefore" />
+    <result column="status" jdbcType="INTEGER" property="status" />
+    <result column="deal_user_id" jdbcType="BIGINT" property="dealUserId" />
+    <result column="deal_detail" jdbcType="VARCHAR" property="dealDetail" />
+    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+    <result column="update_time" jdbcType="TIMESTAMP" property="updateTime" />
+    <result column="deal_time" jdbcType="TIMESTAMP" property="dealTime" />
+    <result column="device_phone" jdbcType="VARCHAR" property="devicePhone" />
+    <result column="phone_time" jdbcType="TIMESTAMP" property="phoneTime" />
+    <result column="device_name" jdbcType="VARCHAR" property="deviceName" />
+    <result column="device_type" jdbcType="BIGINT" property="deviceType" />
+    <result column="device_version" jdbcType="INTEGER" property="deviceVersion" />
+    <result column="count" jdbcType="INTEGER" property="count" />
+    <result column="real_fall" jdbcType="INTEGER" property="realFall" />
+    <result column="description" jdbcType="VARCHAR" property="description" />
+    <result column="df" jdbcType="INTEGER" property="df" />
+
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, device_code, type, confidence, reason, frame_id, event_start_frame, event_end_frame, 
+    height_curr, height_before, status, deal_user_id, deal_detail, create_time, update_time, 
+    deal_time, device_phone, phone_time, device_name, device_type, device_version, count,real_fall,
+    description, df
+  </sql>
+  <!--<select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">-->
+    <!--select -->
+    <!--<include refid="Base_Column_List" />-->
+    <!--from xt_device_alarm-->
+    <!--where id = #{id,jdbcType=BIGINT}-->
+  <!--</select>-->
+
+  <insert id="insert" parameterType="com.optical.bean.DeviceAlarm">
+    insert into xt_device_alarm ( device_code, type,
+      confidence, reason, frame_id, 
+      event_start_frame, event_end_frame, height_curr, 
+      height_before, status, deal_user_id, 
+      deal_detail, create_time, update_time, 
+      deal_time, device_phone, phone_time, 
+      device_name, device_type, device_version, 
+      `count`, real_fall, df)
+    values ( #{deviceCode,jdbcType=VARCHAR}, #{type,jdbcType=INTEGER},
+      #{confidence,jdbcType=INTEGER}, #{reason,jdbcType=INTEGER}, #{frameId,jdbcType=BIGINT},
+      #{eventStartFrame,jdbcType=BIGINT}, #{eventEndFrame,jdbcType=BIGINT}, #{heightCurr,jdbcType=DOUBLE},
+      #{heightBefore,jdbcType=DOUBLE}, #{status,jdbcType=INTEGER}, #{dealUserId,jdbcType=BIGINT},
+      #{dealDetail,jdbcType=VARCHAR}, now(), null,
+      #{dealTime,jdbcType=TIMESTAMP}, #{devicePhone,jdbcType=VARCHAR}, #{phoneTime,jdbcType=TIMESTAMP}, 
+      #{deviceName,jdbcType=VARCHAR}, #{deviceType,jdbcType=BIGINT}, #{deviceVersion,jdbcType=INTEGER}, 
+      #{count,jdbcType=INTEGER}, 0,  #{df,jdbcType=INTEGER})
+  </insert>
+
+
+  <select id="getUnhandledAlarmCount"  resultType="java.lang.Integer">
+    select count(*)
+    from xt_device_alarm
+    where `status` = 0
+    and `df` = 0
+  </select>
+
+
+  <select id="getAlarmCountSinceToday"  resultType="java.lang.Integer">
+    select count(*)
+    from xt_device_alarm
+    where `df` = 0
+    and   <![CDATA[ create_time > #{startTime} ]]>
+  </select>
+
+
+  <!--<select id="getAlarmByTime"  resultMap="BaseResultMap">-->
+  <!--select *-->
+  <!--from tb_server_alarm-->
+  <!--where add_time > #{startTime}-->
+  <!--<if test="endTime != null">-->
+  <!--<![CDATA[ and add_time < #{endTime} ]]>-->
+  <!--</if>-->
+  <!--<if test="deviceTypeList != null">-->
+  <!--and  device_type IN-->
+  <!--<foreach collection="deviceTypeList" item="item" index="index" open="(" close=")" separator=",">-->
+  <!--#{item}-->
+  <!--</foreach>-->
+  <!--</if>-->
+  <!--</select>-->
+
+
+
+
+  <select id="getUnhandledAlarmCountByDeviceCode" parameterType="java.lang.String" resultType="java.lang.Integer">
+  select
+  count(*)
+  from xt_device_alarm
+  where device_code = #{deviceCode,jdbcType=VARCHAR}
+  and `status` = 0
+  and `df` = 0
+  </select>
+
+
+
+  <update id="updateAlarmStatus">
+    update xt_device_alarm
+    <set>
+      <if test="status != null">
+        status = #{status},
+      </if>
+      update_time = now(),
+    </set>
+    where device_code = #{deviceCode,jdbcType=VARCHAR}
+    and df = 0
+  </update>
+
+  <update id="updateRealFall">
+    update xt_device_alarm
+    <set>
+
+      real_fall = 1 - real_fall,
+
+      update_time = now(),
+    </set>
+    where id = #{id}
+    and df = 0
+  </update>
+
+  <update id="updateAlarmType">
+    update xt_device_alarm
+    <set>
+      type = #{type},
+      update_time = now(),
+    </set>
+    where id = #{id}
+    and df = 0
+  </update>
+
+
+  <update id="updateDescription">
+    update xt_device_alarm
+    <set>
+      description = #{description},
+      update_time = now(),
+    </set>
+    where id = #{id}
+    and df = 0
+  </update>
+
+
+
+
+
+  <select id="getAll" parameterType="java.lang.String" resultMap="BaseResultMap">
+    select *
+    from xt_device_alarm
+    where `df` = 0
+    order by create_time DESC
+  </select>
+
+
+  <select id="getDataCountByCondition" resultType="java.lang.Integer">
+    select count(*)
+    from xt_device_alarm
+    where df = 0
+    <if test="deviceCode!=null and deviceCode!=''">
+      and device_code = #{deviceCode}
+    </if>
+    <if test="status!=null">
+      and status = #{status}
+    </if>
+  </select>
+
+  <select id="getDataByCondition" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from xt_device_alarm
+    where df = 0
+    <if test="deviceCode!=null and deviceCode!=''">
+      and device_code = #{deviceCode}
+    </if>
+    <if test="status!=null">
+      and status = #{status}
+    </if>
+    order by create_time DESC
+    <if test="start!=null">
+      limit #{start}, #{end}
+    </if>
+  </select>
+
+
+
+
+
+  <!--<insert id="insertSelective" parameterType="com.optical.bean.DeviceAlarm">-->
+    <!--insert into xt_device_alarm-->
+    <!--<trim prefix="(" suffix=")" suffixOverrides=",">-->
+      <!--<if test="id != null">-->
+        <!--id,-->
+      <!--</if>-->
+      <!--<if test="deviceCode != null">-->
+        <!--device_code,-->
+      <!--</if>-->
+      <!--<if test="type != null">-->
+        <!--type,-->
+      <!--</if>-->
+      <!--<if test="confidence != null">-->
+        <!--confidence,-->
+      <!--</if>-->
+      <!--<if test="reason != null">-->
+        <!--reason,-->
+      <!--</if>-->
+      <!--<if test="frameId != null">-->
+        <!--frame_id,-->
+      <!--</if>-->
+      <!--<if test="eventStartFrame != null">-->
+        <!--event_start_frame,-->
+      <!--</if>-->
+      <!--<if test="eventEndFrame != null">-->
+        <!--event_end_frame,-->
+      <!--</if>-->
+      <!--<if test="heightCurr != null">-->
+        <!--height_curr,-->
+      <!--</if>-->
+      <!--<if test="heightBefore != null">-->
+        <!--height_before,-->
+      <!--</if>-->
+      <!--<if test="status != null">-->
+        <!--status,-->
+      <!--</if>-->
+      <!--<if test="dealUserId != null">-->
+        <!--deal_user_id,-->
+      <!--</if>-->
+      <!--<if test="dealDetail != null">-->
+        <!--deal_detail,-->
+      <!--</if>-->
+      <!--<if test="createTime != null">-->
+        <!--create_time,-->
+      <!--</if>-->
+      <!--<if test="updateTime != null">-->
+        <!--update_time,-->
+      <!--</if>-->
+      <!--<if test="dealTime != null">-->
+        <!--deal_time,-->
+      <!--</if>-->
+      <!--<if test="devicePhone != null">-->
+        <!--device_phone,-->
+      <!--</if>-->
+      <!--<if test="phoneTime != null">-->
+        <!--phone_time,-->
+      <!--</if>-->
+      <!--<if test="deviceName != null">-->
+        <!--device_name,-->
+      <!--</if>-->
+      <!--<if test="deviceType != null">-->
+        <!--device_type,-->
+      <!--</if>-->
+      <!--<if test="deviceVersion != null">-->
+        <!--device_version,-->
+      <!--</if>-->
+      <!--<if test="count != null">-->
+        <!--count,-->
+      <!--</if>-->
+      <!--<if test="df != null">-->
+        <!--df,-->
+      <!--</if>-->
+    <!--</trim>-->
+    <!--<trim prefix="values (" suffix=")" suffixOverrides=",">-->
+      <!--<if test="id != null">-->
+        <!--#{id,jdbcType=BIGINT},-->
+      <!--</if>-->
+      <!--<if test="deviceCode != null">-->
+        <!--#{deviceCode,jdbcType=VARCHAR},-->
+      <!--</if>-->
+      <!--<if test="type != null">-->
+        <!--#{type,jdbcType=INTEGER},-->
+      <!--</if>-->
+      <!--<if test="confidence != null">-->
+        <!--#{confidence,jdbcType=VARCHAR},-->
+      <!--</if>-->
+      <!--<if test="reason != null">-->
+        <!--#{reason,jdbcType=VARCHAR},-->
+      <!--</if>-->
+      <!--<if test="frameId != null">-->
+        <!--#{frameId,jdbcType=BIGINT},-->
+      <!--</if>-->
+      <!--<if test="eventStartFrame != null">-->
+        <!--#{eventStartFrame,jdbcType=BIGINT},-->
+      <!--</if>-->
+      <!--<if test="eventEndFrame != null">-->
+        <!--#{eventEndFrame,jdbcType=BIGINT},-->
+      <!--</if>-->
+      <!--<if test="heightCurr != null">-->
+        <!--#{heightCurr,jdbcType=VARCHAR},-->
+      <!--</if>-->
+      <!--<if test="heightBefore != null">-->
+        <!--#{heightBefore,jdbcType=VARCHAR},-->
+      <!--</if>-->
+      <!--<if test="status != null">-->
+        <!--#{status,jdbcType=INTEGER},-->
+      <!--</if>-->
+      <!--<if test="dealUserId != null">-->
+        <!--#{dealUserId,jdbcType=BIGINT},-->
+      <!--</if>-->
+      <!--<if test="dealDetail != null">-->
+        <!--#{dealDetail,jdbcType=VARCHAR},-->
+      <!--</if>-->
+      <!--<if test="createTime != null">-->
+        <!--#{createTime,jdbcType=TIMESTAMP},-->
+      <!--</if>-->
+      <!--<if test="updateTime != null">-->
+        <!--#{updateTime,jdbcType=TIMESTAMP},-->
+      <!--</if>-->
+      <!--<if test="dealTime != null">-->
+        <!--#{dealTime,jdbcType=TIMESTAMP},-->
+      <!--</if>-->
+      <!--<if test="devicePhone != null">-->
+        <!--#{devicePhone,jdbcType=VARCHAR},-->
+      <!--</if>-->
+      <!--<if test="phoneTime != null">-->
+        <!--#{phoneTime,jdbcType=TIMESTAMP},-->
+      <!--</if>-->
+      <!--<if test="deviceName != null">-->
+        <!--#{deviceName,jdbcType=VARCHAR},-->
+      <!--</if>-->
+      <!--<if test="deviceType != null">-->
+        <!--#{deviceType,jdbcType=BIGINT},-->
+      <!--</if>-->
+      <!--<if test="deviceVersion != null">-->
+        <!--#{deviceVersion,jdbcType=INTEGER},-->
+      <!--</if>-->
+      <!--<if test="count != null">-->
+        <!--#{count,jdbcType=INTEGER},-->
+      <!--</if>-->
+      <!--<if test="df != null">-->
+        <!--#{df,jdbcType=INTEGER},-->
+      <!--</if>-->
+    <!--</trim>-->
+  <!--</insert>-->
+  <!--<update id="updateByPrimaryKeySelective" parameterType="com.optical.bean.DeviceAlarm">-->
+    <!--update xt_device_alarm-->
+    <!--<set>-->
+      <!--<if test="deviceCode != null">-->
+        <!--device_code = #{deviceCode,jdbcType=VARCHAR},-->
+      <!--</if>-->
+      <!--<if test="type != null">-->
+        <!--type = #{type,jdbcType=INTEGER},-->
+      <!--</if>-->
+      <!--<if test="confidence != null">-->
+        <!--confidence = #{confidence,jdbcType=VARCHAR},-->
+      <!--</if>-->
+      <!--<if test="reason != null">-->
+        <!--reason = #{reason,jdbcType=VARCHAR},-->
+      <!--</if>-->
+      <!--<if test="frameId != null">-->
+        <!--frame_id = #{frameId,jdbcType=BIGINT},-->
+      <!--</if>-->
+      <!--<if test="eventStartFrame != null">-->
+        <!--event_start_frame = #{eventStartFrame,jdbcType=BIGINT},-->
+      <!--</if>-->
+      <!--<if test="eventEndFrame != null">-->
+        <!--event_end_frame = #{eventEndFrame,jdbcType=BIGINT},-->
+      <!--</if>-->
+      <!--<if test="heightCurr != null">-->
+        <!--height_curr = #{heightCurr,jdbcType=VARCHAR},-->
+      <!--</if>-->
+      <!--<if test="heightBefore != null">-->
+        <!--height_before = #{heightBefore,jdbcType=VARCHAR},-->
+      <!--</if>-->
+      <!--<if test="status != null">-->
+        <!--status = #{status,jdbcType=INTEGER},-->
+      <!--</if>-->
+      <!--<if test="dealUserId != null">-->
+        <!--deal_user_id = #{dealUserId,jdbcType=BIGINT},-->
+      <!--</if>-->
+      <!--<if test="dealDetail != null">-->
+        <!--deal_detail = #{dealDetail,jdbcType=VARCHAR},-->
+      <!--</if>-->
+      <!--<if test="createTime != null">-->
+        <!--create_time = #{createTime,jdbcType=TIMESTAMP},-->
+      <!--</if>-->
+      <!--<if test="updateTime != null">-->
+        <!--update_time = #{updateTime,jdbcType=TIMESTAMP},-->
+      <!--</if>-->
+      <!--<if test="dealTime != null">-->
+        <!--deal_time = #{dealTime,jdbcType=TIMESTAMP},-->
+      <!--</if>-->
+      <!--<if test="devicePhone != null">-->
+        <!--device_phone = #{devicePhone,jdbcType=VARCHAR},-->
+      <!--</if>-->
+      <!--<if test="phoneTime != null">-->
+        <!--phone_time = #{phoneTime,jdbcType=TIMESTAMP},-->
+      <!--</if>-->
+      <!--<if test="deviceName != null">-->
+        <!--device_name = #{deviceName,jdbcType=VARCHAR},-->
+      <!--</if>-->
+      <!--<if test="deviceType != null">-->
+        <!--device_type = #{deviceType,jdbcType=BIGINT},-->
+      <!--</if>-->
+      <!--<if test="deviceVersion != null">-->
+        <!--device_version = #{deviceVersion,jdbcType=INTEGER},-->
+      <!--</if>-->
+      <!--<if test="count != null">-->
+        <!--count = #{count,jdbcType=INTEGER},-->
+      <!--</if>-->
+      <!--<if test="df != null">-->
+        <!--df = #{df,jdbcType=INTEGER},-->
+      <!--</if>-->
+    <!--</set>-->
+    <!--where id = #{id,jdbcType=BIGINT}-->
+  <!--</update>-->
+  <!--<update id="updateByPrimaryKey" parameterType="com.optical.bean.DeviceAlarm">-->
+    <!--update xt_device_alarm-->
+    <!--set device_code = #{deviceCode,jdbcType=VARCHAR},-->
+      <!--type = #{type,jdbcType=INTEGER},-->
+      <!--confidence = #{confidence,jdbcType=VARCHAR},-->
+      <!--reason = #{reason,jdbcType=VARCHAR},-->
+      <!--frame_id = #{frameId,jdbcType=BIGINT},-->
+      <!--event_start_frame = #{eventStartFrame,jdbcType=BIGINT},-->
+      <!--event_end_frame = #{eventEndFrame,jdbcType=BIGINT},-->
+      <!--height_curr = #{heightCurr,jdbcType=VARCHAR},-->
+      <!--height_before = #{heightBefore,jdbcType=VARCHAR},-->
+      <!--status = #{status,jdbcType=INTEGER},-->
+      <!--deal_user_id = #{dealUserId,jdbcType=BIGINT},-->
+      <!--deal_detail = #{dealDetail,jdbcType=VARCHAR},-->
+      <!--create_time = #{createTime,jdbcType=TIMESTAMP},-->
+      <!--update_time = #{updateTime,jdbcType=TIMESTAMP},-->
+      <!--deal_time = #{dealTime,jdbcType=TIMESTAMP},-->
+      <!--device_phone = #{devicePhone,jdbcType=VARCHAR},-->
+      <!--phone_time = #{phoneTime,jdbcType=TIMESTAMP},-->
+      <!--device_name = #{deviceName,jdbcType=VARCHAR},-->
+      <!--device_type = #{deviceType,jdbcType=BIGINT},-->
+      <!--device_version = #{deviceVersion,jdbcType=INTEGER},-->
+      <!--count = #{count,jdbcType=INTEGER},-->
+      <!--df = #{df,jdbcType=INTEGER}-->
+    <!--where id = #{id,jdbcType=BIGINT}-->
+  <!--</update>-->
+
+
+  <!--<delete id="deleteByPrimaryKey" parameterType="java.lang.Long">-->
+    <!--delete from xt_device_alarm-->
+    <!--where id = #{id,jdbcType=BIGINT}-->
+  <!--</delete>-->
+  <!---->
+</mapper>

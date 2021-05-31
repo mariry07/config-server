@@ -4,10 +4,13 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 /**
  * Created by mary on 2021/1/6.
  */
+
+@Component
 public class NettyOutBoundHandler extends ChannelOutboundHandlerAdapter {
 
     private static Logger logger = LoggerFactory.getLogger(NettyOutBoundHandler.class);
@@ -17,6 +20,25 @@ public class NettyOutBoundHandler extends ChannelOutboundHandlerAdapter {
     @Override
     public void write(ChannelHandlerContext ctx, Object msg,
                       ChannelPromise promise) throws Exception {
+
+        if(msg instanceof String) {
+            String m = (String)msg;
+            byte[] bytesWrite = new byte[0];
+            try {
+                bytesWrite = m.getBytes("UTF-8");
+                ByteBuf buf = ctx.alloc().buffer(bytesWrite.length);
+                buf.writeBytes(bytesWrite);
+                ctx.writeAndFlush(buf).addListener(new ChannelFutureListener(){
+                    @Override
+                    public void operationComplete(ChannelFuture future)
+                            throws Exception {
+                        logger.info("下发成功！");
+                    }
+                });
+            }catch (Exception e) {
+                logger.error("NettyOutBoundHandler.write ERROR");
+            }
+        }
 
         if (msg instanceof byte[]) {
             byte[] bytesWrite = (byte[])msg;

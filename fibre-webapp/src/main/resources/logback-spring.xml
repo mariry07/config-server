@@ -1,10 +1,13 @@
 <configuration debug="true" scan="true" scanPeriod="30 seconds">
 
-    <property name="APP_NAME" value="xt-optical-release" />
-    <property name="LOG_HOME" value="/xt-optical-release" />
+    <property name="APP_NAME" value="xt-service-release" />
+    <property name="LOG_HOME" value="/xt-service-release" />
+    <property name="POINT_NAME" value="/xt-service-pointcloud" />
+
     <property name="ENCODER_PATTERN"
               value="%d{yyyy-MM-dd  HH:mm:ss.SSS} %-5level [%10.10thread] [%X{X-B3-TraceId}] %logger{20} - %msg%n" />
     <contextName>${APP_NAME}</contextName>
+
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${LOG_HOME}/${APP_NAME}.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
@@ -17,6 +20,9 @@
         </encoder>
     </appender>
 
+
+
+
     <!-- ch.qos.logback.core.ConsoleAppender 控制台输出 -->
     <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
@@ -24,6 +30,7 @@
             </pattern>
         </encoder>
     </appender>
+
 
     <root>
         <level value="INFO" />

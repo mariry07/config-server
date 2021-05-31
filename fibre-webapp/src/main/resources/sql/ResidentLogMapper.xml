@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.optical.mapper.ResidentLogMapper">
+  <resultMap id="BaseResultMap" type="com.optical.bean.ResidentLog">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="resident_id" jdbcType="BIGINT" property="residentId" />
+    <result column="code" jdbcType="VARCHAR" property="code" />
+    <result column="name" jdbcType="VARCHAR" property="name" />
+    <result column="fall_count" jdbcType="INTEGER" property="fallCount" />
+    <result column="wc_count" jdbcType="INTEGER" property="wcCount" />
+    <result column="night_get_up_count" jdbcType="INTEGER" property="nightGetUpCount" />
+    <result column="visitor" jdbcType="INTEGER" property="visitor" />
+    <result column="sleep_time" jdbcType="VARCHAR" property="sleepTime" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, resident_id, code, name, fall_count, wc_count, night_get_up_count, visitor, sleep_time
+  </sql>
+  <select id="getById" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from xt_resident_log
+    where id = #{id,jdbcType=BIGINT}
+  </select>
+
+  <select id="getByResidentCode"  resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from xt_resident_log
+    where code = #{code,jdbcType=VARCHAR}
+  </select>
+
+  <select id="getByResidentId"  resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from xt_resident_log
+    where resident_id = #{residentId}
+  </select>
+
+
+
+
+  <update id="deleteById" parameterType="java.lang.Long">
+    update xt_resident_log
+    set df = 1
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+  <insert id="insert" parameterType="com.optical.bean.ResidentLog">
+    insert into xt_resident_log (id, resident_id, code, 
+      name, fall_count, wc_count, 
+      night_get_up_count, visitor, sleep_time
+      )
+    values (#{id,jdbcType=BIGINT}, #{residentId,jdbcType=BIGINT}, #{code,jdbcType=VARCHAR},
+      #{name,jdbcType=VARCHAR}, #{fallCount,jdbcType=INTEGER}, #{wcCount,jdbcType=INTEGER}, 
+      #{nightGetUpCount,jdbcType=INTEGER}, #{visitor,jdbcType=INTEGER}, #{sleepTime,jdbcType=VARCHAR}
+      )
+  </insert>
+
+
+
+
+
+
+  <!--<insert id="insertSelective" parameterType="com.optical.bean.ResidentLog">-->
+    <!--insert into xt_resident_log-->
+    <!--<trim prefix="(" suffix=")" suffixOverrides=",">-->
+      <!--<if test="id != null">-->
+        <!--id,-->
+      <!--</if>-->
+      <!--<if test="residentId != null">-->
+        <!--resident_id,-->
+      <!--</if>-->
+      <!--<if test="code != null">-->
+        <!--code,-->
+      <!--</if>-->
+      <!--<if test="name != null">-->
+        <!--name,-->
+      <!--</if>-->
+      <!--<if test="fallCount != null">-->
+        <!--fall_count,-->
+      <!--</if>-->
+      <!--<if test="wcCount != null">-->
+        <!--wc_count,-->
+      <!--</if>-->
+      <!--<if test="nightGetUpCount != null">-->
+        <!--night_get_up_count,-->
+      <!--</if>-->
+      <!--<if test="visitor != null">-->
+        <!--visitor,-->
+      <!--</if>-->
+      <!--<if test="sleepTime != null">-->
+        <!--sleep_time,-->
+      <!--</if>-->
+    <!--</trim>-->
+    <!--<trim prefix="values (" suffix=")" suffixOverrides=",">-->
+      <!--<if test="id != null">-->
+        <!--#{id,jdbcType=BIGINT},-->
+      <!--</if>-->
+      <!--<if test="residentId != null">-->
+        <!--#{residentId,jdbcType=VARCHAR},-->
+      <!--</if>-->
+      <!--<if test="code != null">-->
+        <!--#{code,jdbcType=VARCHAR},-->
+      <!--</if>-->
+      <!--<if test="name != null">-->
+        <!--#{name,jdbcType=VARCHAR},-->
+      <!--</if>-->
+      <!--<if test="fallCount != null">-->
+        <!--#{fallCount,jdbcType=INTEGER},-->
+      <!--</if>-->
+      <!--<if test="wcCount != null">-->
+        <!--#{wcCount,jdbcType=INTEGER},-->
+      <!--</if>-->
+      <!--<if test="nightGetUpCount != null">-->
+        <!--#{nightGetUpCount,jdbcType=INTEGER},-->
+      <!--</if>-->
+      <!--<if test="visitor != null">-->
+        <!--#{visitor,jdbcType=INTEGER},-->
+      <!--</if>-->
+      <!--<if test="sleepTime != null">-->
+        <!--#{sleepTime,jdbcType=VARCHAR},-->
+      <!--</if>-->
+    <!--</trim>-->
+  <!--</insert>-->
+  <!--<update id="updateByPrimaryKeySelective" parameterType="com.optical.bean.ResidentLog">-->
+    <!--update xt_resident_log-->
+    <!--<set>-->
+      <!--<if test="residentId != null">-->
+        <!--resident_id = #{residentId,jdbcType=BIGINT},-->
+      <!--</if>-->
+      <!--<if test="code != null">-->
+        <!--code = #{code,jdbcType=VARCHAR},-->
+      <!--</if>-->
+      <!--<if test="name != null">-->
+        <!--name = #{name,jdbcType=VARCHAR},-->
+      <!--</if>-->
+      <!--<if test="fallCount != null">-->
+        <!--fall_count = #{fallCount,jdbcType=INTEGER},-->
+      <!--</if>-->
+      <!--<if test="wcCount != null">-->
+        <!--wc_count = #{wcCount,jdbcType=INTEGER},-->
+      <!--</if>-->
+      <!--<if test="nightGetUpCount != null">-->
+        <!--night_get_up_count = #{nightGetUpCount,jdbcType=INTEGER},-->
+      <!--</if>-->
+      <!--<if test="visitor != null">-->
+        <!--visitor = #{visitor,jdbcType=INTEGER},-->
+      <!--</if>-->
+      <!--<if test="sleepTime != null">-->
+        <!--sleep_time = #{sleepTime,jdbcType=VARCHAR},-->
+      <!--</if>-->
+    <!--</set>-->
+    <!--where id = #{id,jdbcType=BIGINT}-->
+  <!--</update>-->
+  <!--<update id="updateByPrimaryKey" parameterType="com.optical.bean.ResidentLog">-->
+    <!--update xt_resident_log-->
+    <!--set resident_id = #{residentId,jdbcType=BIGINT},-->
+      <!--code = #{code,jdbcType=VARCHAR},-->
+      <!--name = #{name,jdbcType=VARCHAR},-->
+      <!--fall_count = #{fallCount,jdbcType=INTEGER},-->
+      <!--wc_count = #{wcCount,jdbcType=INTEGER},-->
+      <!--night_get_up_count = #{nightGetUpCount,jdbcType=INTEGER},-->
+      <!--visitor = #{visitor,jdbcType=INTEGER},-->
+      <!--sleep_time = #{sleepTime,jdbcType=VARCHAR}-->
+    <!--where id = #{id,jdbcType=BIGINT}-->
+  <!--</update>-->
+</mapper>

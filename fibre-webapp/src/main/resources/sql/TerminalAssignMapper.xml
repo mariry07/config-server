@@ -1,0 +1,385 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.optical.mapper.TerminalAssignMapper">
+  <resultMap id="BaseResultMap" type="com.optical.bean.TerminalAssign">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="device_code" jdbcType="VARCHAR" property="deviceCode" />
+    <result column="device_name" jdbcType="VARCHAR" property="deviceName" />
+    <result column="imei" jdbcType="VARCHAR" property="imei" />
+    <result column="ip" jdbcType="VARCHAR" property="ip" />
+    <result column="port" jdbcType="VARCHAR" property="port" />
+    <result column="device_key" jdbcType="VARCHAR" property="deviceKey" />
+    <result column="product_key" jdbcType="VARCHAR" property="productKey" />
+    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+    <result column="phone" jdbcType="VARCHAR" property="phone" />
+    <result column="leave_ground_duration" jdbcType="DOUBLE" property="leaveGroundDuration" />
+    <result column="on_ground_duration" jdbcType="DOUBLE" property="onGroundDuration" />
+    <result column="confidence_threshold" jdbcType="DOUBLE" property="confidenceThreshold" />
+    <result column="sensor_fix_height" jdbcType="DOUBLE" property="sensorFixHeight" />
+    <result column="cloud_upload_enable" jdbcType="INTEGER" property="cloudUploadEnable" />
+    <result column="lastest_assign_time" jdbcType="TIMESTAMP" property="lastestAssignTime" />
+    <result column="status" jdbcType="INTEGER" property="status" />
+    <result column="phone_enable" jdbcType="INTEGER" property="phoneEnable" />
+    <result column="remarks" jdbcType="VARCHAR" property="remarks" />
+    <result column="location" jdbcType="INTEGER" property="location" />
+  </resultMap>
+
+
+  <sql id="Base_Column_List">
+    id, device_code, imei, ip, port, device_key, product_key, create_time, lastest_assign_time, 
+    status, leave_ground_duration, on_ground_duration, confidence_threshold, sensor_fix_height,
+    cloud_upload_enable, phone_enable, phone, device_name, remarks, location
+  </sql>
+  <select id="getById" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from xt_terminal_imei_assign
+    where id = #{id,jdbcType=BIGINT}
+  </select>
+
+  <select id="getByImei" parameterType="java.lang.String" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from xt_terminal_imei_assign
+    where imei = #{imei,jdbcType=VARCHAR}
+    limit 1
+  </select>
+
+  <select id="getPhoneByDeviceCode" resultType="java.lang.String">
+    select phone
+    from xt_terminal_imei_assign
+    where device_code = #{deviceCode}
+    and phone_enable = 1
+    limit 1
+  </select>
+
+
+  <select id="getDeviceName" resultType="java.lang.String">
+    select device_name
+    from xt_terminal_imei_assign
+    where device_code = #{deviceCode}
+    limit 1
+  </select>
+
+  <select id="getConfigInfoByDeviceCode" resultMap="BaseResultMap">
+    select id, device_code, leave_ground_duration, on_ground_duration,
+    confidence_threshold, sensor_fix_height, cloud_upload_enable
+    from xt_terminal_imei_assign
+    where device_code = #{deviceCode}
+    limit 1
+  </select>
+
+
+  <select id="getAllDeviceCodeImei" resultMap="BaseResultMap">
+    select id, device_code, imei
+    from xt_terminal_imei_assign
+    where df = 0
+  </select>
+
+
+  <select id="getCloudUploadEnable" resultType="java.lang.Integer">
+    select cloud_upload_enable
+    from xt_terminal_imei_assign
+    where device_code = #{deviceCode}
+  </select>
+
+  <select id="getLocationByDeviceCode" resultType="java.lang.Integer">
+    select location
+    from xt_terminal_imei_assign
+    where device_code = #{deviceCode}
+  </select>
+
+
+
+
+  <update id="updateLastestAssignTime" >
+    update xt_terminal_imei_assign
+    set lastest_assign_time = now()
+    where imei = #{imei}
+  </update>
+
+
+  <update id="updatePhoneEnable" >
+    update xt_terminal_imei_assign
+    <set>
+      <if test="phoneEnable != null">
+        phone_enable = #{phoneEnable},
+      </if>
+    </set>
+    where device_code = #{deviceCode}
+  </update>
+
+
+  <update id="updatePhone" >
+    update xt_terminal_imei_assign
+    <set>
+      <if test="phone != null">
+        phone = #{phone},
+      </if>
+    </set>
+    where device_code = #{deviceCode}
+  </update>
+
+
+  <update id="updateDeviceOffline" >
+    update xt_terminal_imei_assign
+    <set>
+        `status` = 1
+    </set>
+    where 1 = 1
+    <if test="deviceCodeList != null">
+      and  device_code IN
+      <foreach collection="deviceCodeList" item="item"  open="(" close=")" separator=",">
+        #{item}
+      </foreach>
+    </if>
+  </update>
+
+
+
+  <update id="updateDeviceOnline" >
+    update xt_terminal_imei_assign
+    <set>
+      `status` = 0
+    </set>
+    where 1 = 1
+    <if test="deviceCodeList != null">
+      and  device_code IN
+      <foreach collection="deviceCodeList" item="item"  open="(" close=")" separator=",">
+        #{item}
+      </foreach>
+    </if>
+  </update>
+
+
+  <!--<select id="getAlarmByTime"  resultMap="BaseResultMap">-->
+    <!--select *-->
+    <!--from tb_server_alarm-->
+    <!--where add_time > #{startTime}-->
+    <!--<if test="endTime != null">-->
+      <!--<![CDATA[ and add_time < #{endTime} ]]>-->
+    <!--</if>-->
+    <!--<if test="deviceTypeList != null">-->
+      <!--and  device_type IN-->
+      <!--<foreach collection="deviceTypeList" item="item" index="index" open="(" close=")" separator=",">-->
+        <!--#{item}-->
+      <!--</foreach>-->
+    <!--</if>-->
+
+  <!--</select>-->
+
+
+
+
+  <update id="updateDeviceName" >
+    update xt_terminal_imei_assign
+    <set>
+      <if test="deviceName != null">
+        device_name = #{deviceName},
+      </if>
+    </set>
+    where device_code = #{deviceCode}
+  </update>
+
+
+  <update id="updateConfig"  >
+    update xt_terminal_imei_assign
+    <set>
+      <if test="sensorFixHeight != null">
+        sensor_fix_height = #{sensorFixHeight},
+      </if>
+      <if test="onGroundDuration != null">
+        on_ground_duration = #{onGroundDuration},
+      </if>
+      <if test="leaveGroundDuration != null">
+        leave_ground_duration = #{leaveGroundDuration},
+      </if>
+      <if test="confidenceThreshold != null">
+        confidence_threshold = #{confidenceThreshold},
+      </if>
+      <if test="cloudUploadEnable != null">
+        cloud_upload_enable = #{cloudUploadEnable},
+      </if>
+    </set>
+    where device_code = #{deviceCode}
+  </update>
+
+
+  <select id="getListCountByCondition" parameterType="java.util.Map" resultType="java.lang.Integer">
+    select count(*) from xt_terminal_imei_assign
+    where df = 0
+    <if test="deviceCode!=null and deviceCode != ''">
+      and device_code = #{deviceCode}
+    </if>
+    <if test="imei!=null">
+      and imei = #{imei}
+    </if>
+    <if test="status!=null">
+      and status = #{status}
+    </if>
+  </select>
+
+
+  <select id="getDeviceCount" resultType="java.lang.Integer">
+    select count(*)
+    from xt_terminal_imei_assign
+    where df = 0
+    <if test="status!=null">
+      and status = #{status}
+    </if>
+
+  </select>
+
+
+
+  <select id="getListByCondition" parameterType="java.util.Map" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List"/>
+    from xt_terminal_imei_assign
+    where df = 0
+    <if test="deviceCode!=null and deviceCode != ''">
+      and device_code = #{deviceCode}
+    </if>
+    <if test="imei!=null">
+      and imei = #{imei}
+    </if>
+    <if test="status!=null">
+      and status = #{status}
+    </if>
+    order by lastest_assign_time DESC
+    <if test="start!=null">
+      limit #{start}, #{end}
+    </if>
+  </select>
+
+
+
+  <!---->
+  <!--<delete id="deleteByPrimaryKey" parameterType="java.lang.Long">-->
+    <!--delete from xt_terminal_imei_assign-->
+    <!--where id = #{id,jdbcType=BIGINT}-->
+  <!--</delete>-->
+  <!--<insert id="insert" parameterType="com.optical.bean.TerminalAssign">-->
+    <!--insert into xt_terminal_imei_assign (id, device_code, imei, -->
+      <!--ip, port, device_key, -->
+      <!--product_key, create_time, lastest_assign_time, -->
+      <!--status)-->
+    <!--values (#{id,jdbcType=BIGINT}, #{deviceCode,jdbcType=VARCHAR}, #{imei,jdbcType=VARCHAR}, -->
+      <!--#{ip,jdbcType=VARCHAR}, #{port,jdbcType=VARCHAR}, #{deviceKey,jdbcType=VARCHAR}, -->
+      <!--#{productKey,jdbcType=VARCHAR}, #{createTime,jdbcType=TIMESTAMP}, #{lastestAssignTime,jdbcType=TIMESTAMP}, -->
+      <!--#{status,jdbcType=INTEGER})-->
+  <!--</insert>-->
+  <!--<insert id="insertSelective" parameterType="com.optical.bean.TerminalAssign">-->
+    <!--insert into xt_terminal_imei_assign-->
+    <!--<trim prefix="(" suffix=")" suffixOverrides=",">-->
+      <!--<if test="id != null">-->
+        <!--id,-->
+      <!--</if>-->
+      <!--<if test="deviceCode != null">-->
+        <!--device_code,-->
+      <!--</if>-->
+      <!--<if test="imei != null">-->
+        <!--imei,-->
+      <!--</if>-->
+      <!--<if test="ip != null">-->
+        <!--ip,-->
+      <!--</if>-->
+      <!--<if test="port != null">-->
+        <!--port,-->
+      <!--</if>-->
+      <!--<if test="deviceKey != null">-->
+        <!--device_key,-->
+      <!--</if>-->
+      <!--<if test="productKey != null">-->
+        <!--product_key,-->
+      <!--</if>-->
+      <!--<if test="createTime != null">-->
+        <!--create_time,-->
+      <!--</if>-->
+      <!--<if test="lastestAssignTime != null">-->
+        <!--lastest_assign_time,-->
+      <!--</if>-->
+      <!--<if test="status != null">-->
+        <!--status,-->
+      <!--</if>-->
+    <!--</trim>-->
+    <!--<trim prefix="values (" suffix=")" suffixOverrides=",">-->
+      <!--<if test="id != null">-->
+        <!--#{id,jdbcType=BIGINT},-->
+      <!--</if>-->
+      <!--<if test="deviceCode != null">-->
+        <!--#{deviceCode,jdbcType=VARCHAR},-->
+      <!--</if>-->
+      <!--<if test="imei != null">-->
+        <!--#{imei,jdbcType=VARCHAR},-->
+      <!--</if>-->
+      <!--<if test="ip != null">-->
+        <!--#{ip,jdbcType=VARCHAR},-->
+      <!--</if>-->
+      <!--<if test="port != null">-->
+        <!--#{port,jdbcType=VARCHAR},-->
+      <!--</if>-->
+      <!--<if test="deviceKey != null">-->
+        <!--#{deviceKey,jdbcType=VARCHAR},-->
+      <!--</if>-->
+      <!--<if test="productKey != null">-->
+        <!--#{productKey,jdbcType=VARCHAR},-->
+      <!--</if>-->
+      <!--<if test="createTime != null">-->
+        <!--#{createTime,jdbcType=TIMESTAMP},-->
+      <!--</if>-->
+      <!--<if test="lastestAssignTime != null">-->
+        <!--#{lastestAssignTime,jdbcType=TIMESTAMP},-->
+      <!--</if>-->
+      <!--<if test="status != null">-->
+        <!--#{status,jdbcType=INTEGER},-->
+      <!--</if>-->
+    <!--</trim>-->
+  <!--</insert>-->
+  <!--<update id="updateByPrimaryKeySelective" parameterType="com.optical.bean.TerminalAssign">-->
+    <!--update xt_terminal_imei_assign-->
+    <!--<set>-->
+      <!--<if test="deviceCode != null">-->
+        <!--device_code = #{deviceCode,jdbcType=VARCHAR},-->
+      <!--</if>-->
+      <!--<if test="imei != null">-->
+        <!--imei = #{imei,jdbcType=VARCHAR},-->
+      <!--</if>-->
+      <!--<if test="ip != null">-->
+        <!--ip = #{ip,jdbcType=VARCHAR},-->
+      <!--</if>-->
+      <!--<if test="port != null">-->
+        <!--port = #{port,jdbcType=VARCHAR},-->
+      <!--</if>-->
+      <!--<if test="deviceKey != null">-->
+        <!--device_key = #{deviceKey,jdbcType=VARCHAR},-->
+      <!--</if>-->
+      <!--<if test="productKey != null">-->
+        <!--product_key = #{productKey,jdbcType=VARCHAR},-->
+      <!--</if>-->
+      <!--<if test="createTime != null">-->
+        <!--create_time = #{createTime,jdbcType=TIMESTAMP},-->
+      <!--</if>-->
+      <!--<if test="lastestAssignTime != null">-->
+        <!--lastest_assign_time = #{lastestAssignTime,jdbcType=TIMESTAMP},-->
+      <!--</if>-->
+      <!--<if test="status != null">-->
+        <!--status = #{status,jdbcType=INTEGER},-->
+      <!--</if>-->
+    <!--</set>-->
+    <!--where id = #{id,jdbcType=BIGINT}-->
+  <!--</update>-->
+  <!--<update id="updateByPrimaryKey" parameterType="com.optical.bean.TerminalAssign">-->
+    <!--update xt_terminal_imei_assign-->
+    <!--set device_code = #{deviceCode,jdbcType=VARCHAR},-->
+      <!--imei = #{imei,jdbcType=VARCHAR},-->
+      <!--ip = #{ip,jdbcType=VARCHAR},-->
+      <!--port = #{port,jdbcType=VARCHAR},-->
+      <!--device_key = #{deviceKey,jdbcType=VARCHAR},-->
+      <!--product_key = #{productKey,jdbcType=VARCHAR},-->
+      <!--create_time = #{createTime,jdbcType=TIMESTAMP},-->
+      <!--lastest_assign_time = #{lastestAssignTime,jdbcType=TIMESTAMP},-->
+      <!--status = #{status,jdbcType=INTEGER}-->
+    <!--where id = #{id,jdbcType=BIGINT}-->
+  <!--</update>-->
+
+</mapper>

@@ -26,6 +26,7 @@ import java.util.concurrent.BlockingQueue;
 @SpringBootApplication
 //@EnableAutoConfiguration(exclude={DataSourceAutoConfiguration.class})
 @ComponentScan(basePackages = {
+		"com.optical.controller",
 		"com.optical.bean",
 		"com.optical.common",
 		"com.optical.component",
@@ -42,21 +43,28 @@ public class FibreWebappApplication {
 
 		SpringApplication.run(FibreWebappApplication.class, args);
 
+
 		//启动netty服务端(生产者)
 		NettyServer nettyServer = new NettyServer(queue, 200);
-		//需要内网地址
-        nettyServer.start(new InetSocketAddress("172.31.243.186", 11002));
-//		nettyServer.start(new InetSocketAddress("127.0.0.1", 11002));
 
+
+		//需要内网地址
+		//配置服务器 11002 端口
+        nettyServer.start(new InetSocketAddress("127.0.0.1", 11002));
+
+//		//配置服务器 11002 端口
+//		nettyServer.start(new InetSocketAddress("172.31.243.186", 11002));
+
+        //业务模拟服务器 11003 端口
+//		nettyServer.start(new InetSocketAddress("172.31.243.186", 11003));
 
 
 //		ApplicationContext context = SpringApplication.run(FibreWebappApplication.class, args);
 //		log.info("=======================here start FibreWebappApplication! ===========================");
 //		context.getBean(SocketRunner.class).runrun();
 
-
-
 	}
+
 
 //
 //	@Primary

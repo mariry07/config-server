@@ -1,0 +1,336 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.optical.mapper.ResidentInfoMapper">
+  <resultMap id="BaseResultMap" type="com.optical.bean.ResidentInfo">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="code" jdbcType="VARCHAR" property="code" />
+    <result column="name" jdbcType="VARCHAR" property="name" />
+    <result column="urgent_phone" jdbcType="VARCHAR" property="urgentPhone" />
+    <result column="gender" jdbcType="INTEGER" property="gender" />
+    <result column="age" jdbcType="INTEGER" property="age" />
+    <result column="floor" jdbcType="INTEGER" property="floor" />
+    <result column="room_name" jdbcType="VARCHAR" property="roomName" />
+    <result column="description" jdbcType="VARCHAR" property="description" />
+    <result column="img" jdbcType="VARCHAR" property="img" />
+    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+    <result column="update_time" jdbcType="TIMESTAMP" property="updateTime" />
+    <result column="vendor_id" jdbcType="BIGINT" property="vendorId" />
+    <result column="role_id" jdbcType="BIGINT" property="roleId" />
+    <result column="location" jdbcType="INTEGER" property="location" />
+    <result column="room_num" jdbcType="INTEGER" property="roomNum" />
+
+    <result column="df" jdbcType="INTEGER" property="df" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, code, name, urgent_phone, gender, age, floor, room_name, description, img, create_time,
+    update_time, vendor_id, role_id, df, location, room_num
+  </sql>
+  <select id="getById" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from xt_resident
+    where id = #{id,jdbcType=BIGINT}
+  </select>
+
+
+  <select id="getAll" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from xt_resident
+    where df = 0
+  </select>
+
+
+  <select id="getDataCountByCondition"  resultType="java.lang.Integer">
+    select count(*)
+    from xt_resident
+    where df = 0
+    <if test="roomName!=null">
+      and room_name = #{roomName}
+    </if>
+    <if test="floor!=null">
+      and floor = #{floor}
+    </if>
+    <if test="code!=null">
+      and code = #{code}
+    </if>
+  </select>
+
+
+  <select id="getDataByCondition"  resultMap="BaseResultMap">
+    select *
+    from xt_resident
+    where df = 0
+    <if test="roomName!=null">
+      and room_name = #{roomName}
+    </if>
+    <if test="floor!=null">
+      and floor = #{floor}
+    </if>
+    <if test="code!=null">
+      and code = #{code}
+    </if>
+    order by id
+    <if test="start!=null">
+      limit #{start}, #{limit}
+    </if>
+
+  </select>
+
+
+
+
+
+  <update id="deleteById" parameterType="java.lang.Long">
+    update xt_resident
+    set df = 1
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+  <insert id="insert" parameterType="com.optical.bean.ResidentInfo">
+    insert into xt_resident (id, code, name, 
+      urgent_phone, gender, age, floor,
+      room_name, description, img, 
+      create_time, update_time, vendor_id, 
+      role_id, df, room_num)
+    values (#{id,jdbcType=BIGINT}, #{code,jdbcType=VARCHAR}, #{name,jdbcType=VARCHAR}, 
+      #{urgentPhone,jdbcType=VARCHAR}, #{gender,jdbcType=INTEGER}, #{age,jdbcType=INTEGER}, #{floor,jdbcType=INTEGER},
+      #{roomName,jdbcType=VARCHAR}, #{description,jdbcType=VARCHAR}, #{img,jdbcType=VARCHAR}, 
+      #{createTime,jdbcType=TIMESTAMP}, #{updateTime,jdbcType=TIMESTAMP}, #{vendorId,jdbcType=BIGINT}, 
+      #{roleId,jdbcType=BIGINT}, #{df,jdbcType=INTEGER},#{roomNum,jdbcType=INTEGER} )
+  </insert>
+
+
+
+  <select id="getByResidentCode" resultMap="BaseResultMap">
+    select *
+    from xt_resident
+    where code = #{code}
+    and df = 0
+    limit 1
+  </select>
+
+
+
+  <select id="getNameByResidentDeviceCode" resultType="java.lang.String">
+    select `name`
+    from xt_resident
+    where code = #{code}
+    and df = 0
+    limit 1
+  </select>
+
+
+  <update id="updateLocation" >
+    update xt_resident
+    set location = #{location}
+    where code = #{deviceCode} and df = 0
+  </update>
+
+
+  <update id="updateResident" >
+  update xt_resident
+  <set>
+
+  <if test="name != null">
+  `name` = #{name,jdbcType=VARCHAR},
+  </if>
+  <if test="urgentPhone != null">
+  urgent_phone = #{urgentPhone,jdbcType=VARCHAR},
+  </if>
+  <if test="gender != null">
+  gender = #{gender,jdbcType=INTEGER},
+  </if>
+  <if test="age != null">
+  age = #{age,jdbcType=INTEGER},
+  </if>
+  <if test="floor != null">
+  floor = #{floor,jdbcType=INTEGER},
+  </if>
+  <if test="roomName != null">
+  room_name = #{roomName,jdbcType=VARCHAR},
+  </if>
+  <if test="description != null">
+  description = #{description,jdbcType=VARCHAR},
+  </if>
+
+  update_time = now()
+
+  </set>
+  where id = #{id,jdbcType=BIGINT}
+  </update>
+
+
+  <insert id="insertSelective" parameterType="com.optical.bean.ResidentInfo">
+    insert into xt_resident
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="code != null">
+        code,
+      </if>
+      <if test="name != null">
+        name,
+      </if>
+      <if test="urgentPhone != null">
+        urgent_phone,
+      </if>
+      <if test="gender != null">
+        gender,
+      </if>
+      <if test="age != null">
+        age,
+      </if>
+      <if test="floor != null">
+        floor,
+      </if>
+      <if test="roomName != null">
+        room_name,
+      </if>
+      <if test="description != null">
+        description,
+      </if>
+      <if test="img != null">
+        img,
+      </if>
+      <if test="createTime != null">
+        create_time,
+      </if>
+      <if test="updateTime != null">
+        update_time,
+      </if>
+      <if test="vendorId != null">
+        vendor_id,
+      </if>
+      <if test="roleId != null">
+        role_id,
+      </if>
+      <if test="df != null">
+        df,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=BIGINT},
+      </if>
+      <if test="code != null">
+        #{code,jdbcType=VARCHAR},
+      </if>
+      <if test="name != null">
+        #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="urgentPhone != null">
+        #{urgentPhone,jdbcType=VARCHAR},
+      </if>
+      <if test="gender != null">
+        #{gender,jdbcType=INTEGER},
+      </if>
+      <if test="age != null">
+        #{age,jdbcType=INTEGER},
+      </if>
+      <if test="floor != null">
+        #{floor,jdbcType=INTEGER},
+      </if>
+      <if test="roomName != null">
+        #{roomName,jdbcType=VARCHAR},
+      </if>
+      <if test="description != null">
+        #{description,jdbcType=VARCHAR},
+      </if>
+      <if test="img != null">
+        #{img,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateTime != null">
+        #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="vendorId != null">
+        #{vendorId,jdbcType=BIGINT},
+      </if>
+      <if test="roleId != null">
+        #{roleId,jdbcType=BIGINT},
+      </if>
+      <if test="df != null">
+        #{df,jdbcType=INTEGER},
+      </if>
+      <if test="location != null">
+        #{location,jdbcType=INTEGER},
+      </if>
+
+    </trim>
+  </insert>
+
+  <update id="updateSelective" parameterType="com.optical.bean.ResidentInfo">
+    update xt_resident
+    <set>
+      <if test="code != null">
+        code = #{code,jdbcType=VARCHAR},
+      </if>
+      <if test="name != null">
+        name = #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="urgentPhone != null">
+        urgent_phone = #{urgentPhone,jdbcType=VARCHAR},
+      </if>
+      <if test="gender != null">
+        gender = #{gender,jdbcType=INTEGER},
+      </if>
+      <if test="age != null">
+        age = #{age,jdbcType=INTEGER},
+      </if>
+      <if test="floor != null">
+        floor = #{floor,jdbcType=INTEGER},
+      </if>
+      <if test="roomName != null">
+        room_name = #{roomName,jdbcType=VARCHAR},
+      </if>
+      <if test="description != null">
+        description = #{description,jdbcType=VARCHAR},
+      </if>
+      <if test="img != null">
+        img = #{img,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        create_time = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateTime != null">
+        update_time = #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="vendorId != null">
+        vendor_id = #{vendorId,jdbcType=BIGINT},
+      </if>
+      <if test="roleId != null">
+        role_id = #{roleId,jdbcType=BIGINT},
+      </if>
+      <if test="df != null">
+        df = #{df,jdbcType=INTEGER},
+      </if>
+      <if test="location != null">
+        df = #{location,jdbcType=INTEGER},
+      </if>
+    </set>
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+
+
+  <!--<update id="updateByPrimaryKey" parameterType="com.optical.bean.ResidentInfo">-->
+    <!--update xt_resident-->
+    <!--set code = #{code,jdbcType=VARCHAR},-->
+      <!--name = #{name,jdbcType=VARCHAR},-->
+      <!--urgent_phone = #{urgentPhone,jdbcType=VARCHAR},-->
+      <!--gender = #{gender,jdbcType=INTEGER},-->
+      <!--age = #{age,jdbcType=INTEGER},-->
+      <!--floor = #{floor,jdbcType=INTEGER},-->
+      <!--room_name = #{roomName,jdbcType=VARCHAR},-->
+      <!--description = #{description,jdbcType=VARCHAR},-->
+      <!--img = #{img,jdbcType=VARCHAR},-->
+      <!--create_time = #{createTime,jdbcType=TIMESTAMP},-->
+      <!--update_time = #{updateTime,jdbcType=TIMESTAMP},-->
+      <!--vendor_id = #{vendorId,jdbcType=BIGINT},-->
+      <!--role_id = #{roleId,jdbcType=BIGINT},-->
+      <!--df = #{df,jdbcType=INTEGER}-->
+    <!--where id = #{id,jdbcType=BIGINT}-->
+  <!--</update>-->
+</mapper>

@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.optical.mapper.UserInfoMapper">
+  <resultMap id="BaseResultMap" type="com.optical.bean.UserInfo">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="user_code" jdbcType="VARCHAR" property="userCode" />
+    <result column="user_name" jdbcType="VARCHAR" property="userName" />
+    <result column="password" jdbcType="VARCHAR" property="password" />
+    <result column="last_login_time" jdbcType="TIMESTAMP" property="lastLoginTime" />
+    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+    <result column="update_time" jdbcType="TIMESTAMP" property="updateTime" />
+    <result column="vendor_id" jdbcType="BIGINT" property="vendorId" />
+    <result column="role_id" jdbcType="BIGINT" property="roleId" />
+    <result column="token_time" jdbcType="INTEGER" property="tokenTime" />
+    <result column="token" jdbcType="VARCHAR" property="token" />
+    <result column="open_id" jdbcType="VARCHAR" property="openId" />
+    <result column="df" jdbcType="INTEGER" property="df" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, user_code, user_name, password, last_login_time, create_time, update_time, vendor_id, 
+    role_id, token_time, token, open_id, df
+  </sql>
+  <select id="getById" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from xt_user
+    where id = #{id,jdbcType=BIGINT}
+  </select>
+  <update id="deleteById" parameterType="java.lang.Long">
+    update xt_user
+    set df = 1
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+  <insert id="insert" parameterType="com.optical.bean.UserInfo">
+    insert into xt_user (id, user_code, user_name, 
+      password, last_login_time, create_time, 
+      update_time, vendor_id, role_id, 
+      token_time, token, open_id, 
+      df)
+    values (#{id,jdbcType=BIGINT}, #{userCode,jdbcType=VARCHAR}, #{userName,jdbcType=VARCHAR}, 
+      #{password,jdbcType=VARCHAR}, #{lastLoginTime,jdbcType=TIMESTAMP}, #{createTime,jdbcType=TIMESTAMP}, 
+      #{updateTime,jdbcType=TIMESTAMP}, #{vendorId,jdbcType=BIGINT}, #{roleId,jdbcType=BIGINT}, 
+      #{tokenTime,jdbcType=INTEGER}, #{token,jdbcType=VARCHAR}, #{openId,jdbcType=VARCHAR}, 
+      #{df,jdbcType=INTEGER})
+  </insert>
+
+
+  <!---->
+  <!--<insert id="insertSelective" parameterType="com.optical.bean.UserInfo">-->
+    <!--insert into xt_user-->
+    <!--<trim prefix="(" suffix=")" suffixOverrides=",">-->
+      <!--<if test="id != null">-->
+        <!--id,-->
+      <!--</if>-->
+      <!--<if test="userCode != null">-->
+        <!--user_code,-->
+      <!--</if>-->
+      <!--<if test="userName != null">-->
+        <!--user_name,-->
+      <!--</if>-->
+      <!--<if test="password != null">-->
+        <!--password,-->
+      <!--</if>-->
+      <!--<if test="lastLoginTime != null">-->
+        <!--last_login_time,-->
+      <!--</if>-->
+      <!--<if test="createTime != null">-->
+        <!--create_time,-->
+      <!--</if>-->
+      <!--<if test="updateTime != null">-->
+        <!--update_time,-->
+      <!--</if>-->
+      <!--<if test="vendorId != null">-->
+        <!--vendor_id,-->
+      <!--</if>-->
+      <!--<if test="roleId != null">-->
+        <!--role_id,-->
+      <!--</if>-->
+      <!--<if test="tokenTime != null">-->
+        <!--token_time,-->
+      <!--</if>-->
+      <!--<if test="token != null">-->
+        <!--token,-->
+      <!--</if>-->
+      <!--<if test="openId != null">-->
+        <!--open_id,-->
+      <!--</if>-->
+      <!--<if test="df != null">-->
+        <!--df,-->
+      <!--</if>-->
+    <!--</trim>-->
+    <!--<trim prefix="values (" suffix=")" suffixOverrides=",">-->
+      <!--<if test="id != null">-->
+        <!--#{id,jdbcType=BIGINT},-->
+      <!--</if>-->
+      <!--<if test="userCode != null">-->
+        <!--#{userCode,jdbcType=VARCHAR},-->
+      <!--</if>-->
+      <!--<if test="userName != null">-->
+        <!--#{userName,jdbcType=VARCHAR},-->
+      <!--</if>-->
+      <!--<if test="password != null">-->
+        <!--#{password,jdbcType=VARCHAR},-->
+      <!--</if>-->
+      <!--<if test="lastLoginTime != null">-->
+        <!--#{lastLoginTime,jdbcType=TIMESTAMP},-->
+      <!--</if>-->
+      <!--<if test="createTime != null">-->
+        <!--#{createTime,jdbcType=TIMESTAMP},-->
+      <!--</if>-->
+      <!--<if test="updateTime != null">-->
+        <!--#{updateTime,jdbcType=TIMESTAMP},-->
+      <!--</if>-->
+      <!--<if test="vendorId != null">-->
+        <!--#{vendorId,jdbcType=BIGINT},-->
+      <!--</if>-->
+      <!--<if test="roleId != null">-->
+        <!--#{roleId,jdbcType=BIGINT},-->
+      <!--</if>-->
+      <!--<if test="tokenTime != null">-->
+        <!--#{tokenTime,jdbcType=INTEGER},-->
+      <!--</if>-->
+      <!--<if test="token != null">-->
+        <!--#{token,jdbcType=VARCHAR},-->
+      <!--</if>-->
+      <!--<if test="openId != null">-->
+        <!--#{openId,jdbcType=VARCHAR},-->
+      <!--</if>-->
+      <!--<if test="df != null">-->
+        <!--#{df,jdbcType=INTEGER},-->
+      <!--</if>-->
+    <!--</trim>-->
+  <!--</insert>-->
+  <!--<update id="updateByPrimaryKeySelective" parameterType="com.optical.bean.UserInfo">-->
+    <!--update xt_user-->
+    <!--<set>-->
+      <!--<if test="userCode != null">-->
+        <!--user_code = #{userCode,jdbcType=VARCHAR},-->
+      <!--</if>-->
+      <!--<if test="userName != null">-->
+        <!--user_name = #{userName,jdbcType=VARCHAR},-->
+      <!--</if>-->
+      <!--<if test="password != null">-->
+        <!--password = #{password,jdbcType=VARCHAR},-->
+      <!--</if>-->
+      <!--<if test="lastLoginTime != null">-->
+        <!--last_login_time = #{lastLoginTime,jdbcType=TIMESTAMP},-->
+      <!--</if>-->
+      <!--<if test="createTime != null">-->
+        <!--create_time = #{createTime,jdbcType=TIMESTAMP},-->
+      <!--</if>-->
+      <!--<if test="updateTime != null">-->
+        <!--update_time = #{updateTime,jdbcType=TIMESTAMP},-->
+      <!--</if>-->
+      <!--<if test="vendorId != null">-->
+        <!--vendor_id = #{vendorId,jdbcType=BIGINT},-->
+      <!--</if>-->
+      <!--<if test="roleId != null">-->
+        <!--role_id = #{roleId,jdbcType=BIGINT},-->
+      <!--</if>-->
+      <!--<if test="tokenTime != null">-->
+        <!--token_time = #{tokenTime,jdbcType=INTEGER},-->
+      <!--</if>-->
+      <!--<if test="token != null">-->
+        <!--token = #{token,jdbcType=VARCHAR},-->
+      <!--</if>-->
+      <!--<if test="openId != null">-->
+        <!--open_id = #{openId,jdbcType=VARCHAR},-->
+      <!--</if>-->
+      <!--<if test="df != null">-->
+        <!--df = #{df,jdbcType=INTEGER},-->
+      <!--</if>-->
+    <!--</set>-->
+    <!--where id = #{id,jdbcType=BIGINT}-->
+  <!--</update>-->
+  <!--<update id="updateByPrimaryKey" parameterType="com.optical.bean.UserInfo">-->
+    <!--update xt_user-->
+    <!--set user_code = #{userCode,jdbcType=VARCHAR},-->
+      <!--user_name = #{userName,jdbcType=VARCHAR},-->
+      <!--password = #{password,jdbcType=VARCHAR},-->
+      <!--last_login_time = #{lastLoginTime,jdbcType=TIMESTAMP},-->
+      <!--create_time = #{createTime,jdbcType=TIMESTAMP},-->
+      <!--update_time = #{updateTime,jdbcType=TIMESTAMP},-->
+      <!--vendor_id = #{vendorId,jdbcType=BIGINT},-->
+      <!--role_id = #{roleId,jdbcType=BIGINT},-->
+      <!--token_time = #{tokenTime,jdbcType=INTEGER},-->
+      <!--token = #{token,jdbcType=VARCHAR},-->
+      <!--open_id = #{openId,jdbcType=VARCHAR},-->
+      <!--df = #{df,jdbcType=INTEGER}-->
+    <!--where id = #{id,jdbcType=BIGINT}-->
+  <!--</update>-->
+  <!---->
+</mapper>

@@ -1,23 +1,50 @@
 package com.optical.component;
 
+import com.alibaba.fastjson.JSON;
+import com.aliyun.dyvmsapi20170525.models.SingleCallByTtsResponse;
+import com.optical.Service.impl.ConfigServiceImpl;
+import com.optical.Service.impl.EventServiceImpl;
+import com.optical.bean.*;
+import com.optical.common.AliCallUtil;
+import com.optical.common.ByteUtil;
 import com.optical.common.EncodeUtil;
+import com.optical.common.WebSocketService;
+import com.optical.mapper.TerminalAssignMapper;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.ibatis.annotations.Mapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
+import org.springframework.ws.server.EndpointAdapter;
 
-import java.io.IOException;
+import java.io.*;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
+
+import static com.optical.component.StaticMapRunner.staticMap;
 
 /**
  *
  * netty服务端处理器
  **/
 @Slf4j
+@Mapper
 public class NettyServerHandler extends ChannelInboundHandlerAdapter {
+
+//    private Logger pointcloudLog = LoggerFactory.getLogger("pointcloudLog");
+
     private final BlockingQueue<String> list;
     //队列大小，先这么丑陋的写一下
     private final int maxSize;
@@ -25,6 +52,13 @@ public class NettyServerHandler extends ChannelInboundHandlerAdapter {
         this.list = list;
         this.maxSize = maxSize;
     }
+    @Autowired
+    private MyWebsocketServer websocketServer;
+
+    private ConfigServiceImpl configServiceImpl;
+    private EventServiceImpl eventServiceImpl;
+//    private WebSocketService webSocketService;
+
 
     /**
      * 客户端连接会触发
@@ -38,13 +72,14 @@ public class NettyServerHandler extends ChannelInboundHandlerAdapter {
         //往channel 的messageMap 中放入currentString,并初始化为
         NettyServer.getMessageMap().put(getIPString(ctx), "");
 
-        //TODO: 初始化一个针对当前channel的consumer，只消费当前channel数据；初始化时带入当前map的key值
-        //启动消费者线程
-        MsgConsumer c = new MsgConsumer(list);
-        Thread consumer = new Thread(c);
-        consumer.setName("消费者"+ getIPString(ctx));
-        consumer.start();
 
+
+//        TODO: 初始化一个针对当前channel的consumer，只消费当前channel数据；初始化时带入当前map的key值
+//        启动消费者线程
+//        MsgConsumer c = new MsgConsumer(list);
+//        Thread consumer = new Thread(c);
+//        consumer.setName("消费者"+ getIPString(ctx));
+//        consumer.start();
 
         log.info("Channel active......");
     }
@@ -54,20 +89,350 @@ public class NettyServerHandler extends ChannelInboundHandlerAdapter {
      */
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+        String rtnStr = "";
+        String devicePhone = "";
+        String tmpName = "";
 
         //按照16进制发送时，在ServiceChannelInitializer类里需取消自动按照UTF-8来decode，以防止出现乱码
         ByteBuf buf = (ByteBuf) msg;
         byte[] receiveMsgBytes = new byte[buf.readableBytes()];
         buf.readBytes(receiveMsgBytes);
+        String hexStr = EncodeUtil.binary2Hex(receiveMsgBytes);
+        String jsonStr = ByteUtil.getString(receiveMsgBytes, "utf-8") + "}";
 
-        log.info("服务器收到消息: " + EncodeUtil.binary2Hex(receiveMsgBytes));
-        //消息处理后扔给队列
-        getDatFile(receiveMsgBytes, getIPString(ctx));
+        String logInfo = formatCurrentTimeStr() + "服务器收到消息: " + jsonStr;
+        WebSocketMsg push = new WebSocketMsg(2, 0, logInfo);
+        websocketServer.sendInfo(JSON.toJSONString(push), null);
 
-        ctx.write("server received your msg :)");
+        if(jsonStr.contains("AT*")){
+            ctx.write("wrong json with AT command, drop!");
+            ctx.flush();
+            return;
+        }
+
+        //判断是否是心跳信息
+        if(jsonStr.contains("$$$")) {
+            //TODO：处理心跳包逻辑
+            if(jsonStr.contains("868922053128126")) {
+                //正泰临时补丁
+                staticMap.put("xtd20211700015", System.currentTimeMillis());
+            }
+            log.info("服务器收到消息: " + hexStr);
+            log.info("jsonStr: " + jsonStr);
+            rtnStr = "server-" + jsonStr;
+
+        }else{
+            //处理业务时间数据包逻辑
+            try{
+
+                //判断最后一位是 花括号} 0x7d.若不是,则说明是问题字符串，做折中处理
+                if(jsonStr.charAt(jsonStr.length() - 1) != 0x7d) {
+                    //找到最后一个逗号，将它替换成"}",并且只保留之前的数据
+                    jsonStr = jsonStr.substring(0, jsonStr.lastIndexOf(",") - 1);
+                    jsonStr += "}";
+                }
+                RadarEventBean reb = JSON.parseObject(jsonStr, RadarEventBean.class);
+
+
+                if(reb.getType() == 0) {
+                    log.info("服务器收到消息: " + hexStr);
+                    log.info("jsonStr: " + jsonStr);
+
+                    //注册事件
+                    ConfigInfo ci = handleRegisterEvent(reb);
+                    //在NettyServer deviceCodeMap 中添加deviceCode与ctx的映射关系
+                    //https://blog.csdn.net/weixin_43881309/article/details/109649842
+                    if(ci.getResult() == ConfigInfo.OP_SUCCESS) {
+                        NettyServer.getMessageMap().put(getIPString(ctx), ci.getDevice_code());
+                        NettyServer.getCtxMap().put(ci.getDevice_code(), ctx);
+                        log.info("NettyServer.getCtxMap().put(ci.getDevice_code(): " + ci.getDevice_code() + ")");
+                    }
+                    rtnStr = JSON.toJSONString(ci);
+
+                }else if(reb.getType() == 7) {
+                    log.info("服务器收到消息: " + hexStr);
+                    log.info("jsonStr: " + jsonStr);
+                    Map rtnMap = new HashMap();
+                    rtnMap.put("type", 7);
+                    rtnMap.put("msg", "got your heart beat msg");
+
+                    rtnStr = JSON.toJSONString(rtnMap);
+                    //刷新staticMap 中的设备最近一次信息上报事件
+                    staticMap.put(reb.getDevice_code(), System.currentTimeMillis());
+
+                }else if(reb.getType() == 1) {
+                    log.info("服务器收到消息: " + hexStr);
+                    log.info("jsonStr: " + jsonStr);
+                    // 报警事件
+
+                    //刷新staticMap 中的设备最近一次信息上报事件
+                    staticMap.put(reb.getDevice_code(), System.currentTimeMillis());
+
+                    NettyServer.getMessageMap().put(getIPString(ctx), reb.getDevice_code());
+                    NettyServer.getCtxMap().put(reb.getDevice_code(), ctx);
+                    log.info("1 NettyServer.getCtxMap().get(ci.getDevice_code(): " +
+                    JSON.toJSONString(NettyServer.getCtxMap().get(reb.getDevice_code())));
+
+                    // 1. 报警事件落库
+                    rtnStr = handleAlarmEvent(reb);
+
+                    //推送微信小程序
+                    push.setShowWindow(1);
+                    push.setData(reb.getDevice_code());
+                    websocketServer.sendInfo(JSON.toJSONString(push), null);
+
+                    // 2. TODO：报警丢队列，等待消费打电话。
+                    String phone = getAlarmPhone(reb.getDevice_code());
+                    if(!StringUtils.isEmpty(phone)) {
+                        SingleCallByTtsResponse response = AliCallUtil.singleCallByTts2Phone(phone);
+                        log.info("here called tgtPhone from database " + phone + ", response: " + JSON.toJSONString(response));
+                    }
+                }else if(reb.getType() == 2){
+                    log.info("服务器收到消息: " + hexStr);
+                    log.info("jsonStr: " + jsonStr);
+                    NettyServer.getMessageMap().put(getIPString(ctx), reb.getDevice_code());
+                    NettyServer.getCtxMap().put(reb.getDevice_code(), ctx);
+                    log.info("2 NettyServer.getCtxMap().get(ci.getDevice_code(): " +
+                            JSON.toJSONString(NettyServer.getCtxMap().get(reb.getDevice_code())));
+                    //消警事件
+                    rtnStr = handleDisalarmEvent(reb);
+
+                    //刷新staticMap 中的设备最近一次信息上报事件
+                    staticMap.put(reb.getDevice_code(), System.currentTimeMillis());
+
+                    push.setShowWindow(1);
+                    push.setData(reb.getDevice_code());
+                    websocketServer.sendInfo(JSON.toJSONString(push), null);
+
+
+                }else if(reb.getType() == 3) {
+                    log.info("服务器收到消息: " + hexStr);
+                    log.info("jsonStr: " + jsonStr);
+                    NettyServer.getMessageMap().put(getIPString(ctx), reb.getDevice_code());
+                    NettyServer.getCtxMap().put(reb.getDevice_code(), ctx);
+                    log.info("3 NettyServer.getCtxMap().get(ci.getDevice_code(): " +
+                            JSON.toJSONString(NettyServer.getCtxMap().get(reb.getDevice_code())));
+                    // 雷达高度、阈值等参数设置与获取
+                    rtnStr = handleConfigSettingEvent(reb);
+
+                    //刷新staticMap 中的设备最近一次信息上报事件
+                    staticMap.put(reb.getDevice_code(), System.currentTimeMillis());
+
+
+                }else if(reb.getType() == 4) {
+                    //人员有无发现事件
+                    log.info("服务器收到消息: " + hexStr);
+                    log.info("jsonStr: " + jsonStr);
+                    NettyServer.getMessageMap().put(getIPString(ctx), reb.getDevice_code());
+                    NettyServer.getCtxMap().put(reb.getDevice_code(), ctx);
+
+                    //根据设备位置，配置人员所在位置
+                    rtnStr = handleHumanDetectEvent(reb);
+
+                    //刷新staticMap 中的设备最近一次信息上报事件
+                    staticMap.put(reb.getDevice_code(), System.currentTimeMillis());
+
+                    push.setShowWindow(1);
+                    push.setData(reb.getDevice_code());
+                    websocketServer.sendInfo(JSON.toJSONString(push), null);
+
+                }else if(reb.getType() == 5) {
+
+                    Date date=new Date();
+                    DateFormat format=new SimpleDateFormat("yyyy-MM-dd");
+                    tmpName = reb.getDevice_code() + "_" +  format.format(date) +".dat";
+
+                    //TODO: 点云信息，先存，再解析
+                    byte[] bufArr = EncodeUtil.decryptBASE64(reb.getPointcloud());
+//                    log.info("LyRaPointCloud: \n" + EncodeUtil.binary2Hex(bufArr));
+//                    pointcloudLog.info("&&PointCloud: \n" + EncodeUtil.binary2Hex(bufArr));
+
+                    FileOutputStream fout = new FileOutputStream(tmpName, true);
+                    DataOutputStream toFile=null;
+                    toFile=new DataOutputStream(fout);
+                    toFile.write(bufArr);
+                    toFile.close();
+
+                }else if(reb.getType() == 6) {
+                    log.info("服务器收到消息: " + hexStr);
+                    log.info("jsonStr: " + jsonStr);
+                    Date date=new Date();
+                    DateFormat format=new SimpleDateFormat("yyyy-MM-dd");
+                    String srcName = reb.getDevice_code() + "_" +  format.format(date) + ".dat";
+                    String tgtName = reb.getDevice_code() + "_" +  format.format(date) + "_"
+                            + reb.getEvent_end_frame() +".dat";
+
+                    File file = file=new File(srcName); //指定文件名及路径
+
+                    if (file.renameTo(new File(tgtName))) {
+                        log.info(srcName + " 修改为 " + tgtName);
+                    }
+                    else{
+                        log.info(srcName + " 修改为 " + tgtName + " 失败!");
+                    }
+
+                    //刷新staticMap 中的设备最近一次信息上报事件
+                    staticMap.put(reb.getDevice_code(), System.currentTimeMillis());
+
+                }
+            }catch (Exception e) {
+                log.error("error! e: {}", e);
+                ctx.write("wrong json format");
+                ctx.flush();
+            }
+        }
+        ctx.write(rtnStr);
         ctx.flush();
+
     }
 
+    private String getAlarmPhone(String deviceCode) {
+        String rtn = "";
+        try{
+            configServiceImpl = SpringBeanUtil.getBean(ConfigServiceImpl.class);
+            rtn = configServiceImpl.getDevicePhone(deviceCode);
+            return rtn;
+
+        }catch (Exception e){
+            log.error("getAlarmPhone Error! e={}", e);
+            return rtn;
+
+        }
+    }
+    private ConfigInfo handleRegisterEvent(RadarEventBean reb) {
+        ConfigInfo ci = new ConfigInfo(ConfigInfo.OP_SUCCESS, ConfigInfo.OpMsg.SUCCESS);
+        try{
+            configServiceImpl = SpringBeanUtil.getBean(ConfigServiceImpl.class);
+
+            ci = configServiceImpl.getConfigService(reb.getImei());
+            ci.setType(reb.getType());
+
+        }catch (Exception e) {
+            log.error("Error! handleRegisterEvent(). reb: {}", reb);
+            ci.setResult(ConfigInfo.OP_FAILED);
+            ci.setMessage(ConfigInfo.OpMsg.FAILED);
+        }
+        return ci;
+    }
+
+    private String handleAlarmEvent(RadarEventBean reb) {
+        OpResult op = new OpResult(OpResult.OP_SUCCESS, OpResult.OpMsg.OP_SUCCESS);
+        try{
+            eventServiceImpl = SpringBeanUtil.getBean(EventServiceImpl.class);
+            eventServiceImpl.fallEventDetected(reb);
+            if(reb.getUnique_id() != null) {
+                op.setUnique_id(reb.getUnique_id());
+            }
+            if(!StringUtils.isEmpty(reb.getType())) {
+                op.setType(reb.getType());
+            }
+        }catch (Exception e) {
+            log.error("Error! handleAlarmEvent(). reb: {}", reb);
+            op.setResult(OpResult.OP_FAILED);
+            op.setMsg(OpResult.OpMsg.OP_FAIL);
+        }
+
+        return JSON.toJSONString(op);
+    }
+
+    /*
+        收到信息type=3，获取设备配置信息
+     */
+    private String handleConfigSettingEvent(RadarEventBean reb) {
+
+        Map rtnMap = new HashMap<>();
+        rtnMap.put("result", 1);
+        rtnMap.put("msg", "success");
+
+        if(reb.getUnique_id() != null) {
+            rtnMap.put("unique_id", reb.getUnique_id());
+        }
+        if(!StringUtils.isEmpty(reb.getType())) {
+            rtnMap.put("type", reb.getType());
+        }
+
+        try{
+            configServiceImpl = SpringBeanUtil.getBean(ConfigServiceImpl.class);
+            TerminalAssign ta = configServiceImpl.getDeviceConfigInfo(reb);
+            if(reb.getUnique_id() != null) {
+                rtnMap.put("unique_id", reb.getUnique_id());
+            }
+            if(!StringUtils.isEmpty(reb.getType())) {
+                rtnMap.put("type", reb.getType());
+            }
+            if(ta != null) {
+                rtnMap.put("leave_ground_duration", Math.round(ta.getLeaveGroundDuration() * 100));
+                rtnMap.put("on_ground_duration", Math.round(ta.getOnGroundDuration() * 100));
+                rtnMap.put("confidence_threshold", Math.round(ta.getConfidenceThreshold() * 100));
+                // 注：因嵌入式上是er，故下面的senser必须是er，与嵌入式一致。
+                rtnMap.put("senser_fix_height", Math.round(ta.getSensorFixHeight() * 100));
+                rtnMap.put("cloud_upload_enable", ta.getCloudUploadEnable());
+            }
+
+        }catch (Exception e) {
+            log.error("Error! handleConfigSettingEvent(). reb: {}", reb);
+            rtnMap.put("result", 0);
+            rtnMap.put("msg", "failed");
+        }
+
+        return JSON.toJSONString(rtnMap);
+    }
+
+    private String handleHumanDetectEvent(RadarEventBean reb) {
+        OpResult op = new OpResult(OpResult.OP_SUCCESS, OpResult.OpMsg.OP_SUCCESS);
+
+        try{
+            eventServiceImpl = SpringBeanUtil.getBean(EventServiceImpl.class);
+            eventServiceImpl.humanDetectEvent(reb);
+            if(reb.getUnique_id() != null) {
+                op.setUnique_id(reb.getUnique_id());
+            }
+            if(!StringUtils.isEmpty(reb.getType())) {
+                op.setType(reb.getType());
+            }
+
+        }catch (Exception e) {
+            log.error("Error! handleDisalarmEvent(). reb: {}", reb);
+            op.setResult(OpResult.OP_FAILED);
+            op.setMsg(OpResult.OpMsg.OP_FAIL);
+        }
+        return JSON.toJSONString(op);
+    }
+
+    private String handleDisalarmEvent(RadarEventBean reb) {
+        OpResult op = new OpResult(OpResult.OP_SUCCESS, OpResult.OpMsg.OP_SUCCESS);
+
+        try{
+            eventServiceImpl = SpringBeanUtil.getBean(EventServiceImpl.class);
+            eventServiceImpl.fallEventDismissed(reb);
+            if(reb.getUnique_id() != null) {
+                op.setUnique_id(reb.getUnique_id());
+            }
+            if(!StringUtils.isEmpty(reb.getType())) {
+                op.setType(reb.getType());
+            }
+
+        }catch (Exception e) {
+            log.error("Error! handleDisalarmEvent(). reb: {}", reb);
+            op.setResult(OpResult.OP_FAILED);
+            op.setMsg(OpResult.OpMsg.OP_FAIL);
+        }
+        return JSON.toJSONString(op);
+    }
+
+
+    private String getDevicePhone(String deviceCode) {
+        String rtn = "";
+        try{
+            configServiceImpl = SpringBeanUtil.getBean(ConfigServiceImpl.class);
+            rtn = configServiceImpl.getDevicePhone(deviceCode);
+
+        }catch (Exception e) {
+            log.error("Error! getDevicePhone(). deviceCode: " + deviceCode);
+            return null;
+        }
+        return rtn;
+    }
 
     /**
      * 心跳机制  用户事件触发
@@ -92,11 +457,13 @@ public class NettyServerHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-//        TODO: 删除Channel Map中的失效Client
+//      删除Channel Map中的失效Client
         NettyServer.getMap().remove(getIPString(ctx));
+        String deviceCode = NettyServer.getMessageMap().get(getIPString(ctx));
+        NettyServer.getCtxMap().remove(deviceCode);
         NettyServer.getMessageMap().remove(getIPString(ctx));
         ctx.close();
-        //TODO: 同步杀掉进程
+        //TODO: 同步杀掉consumer进程
 
     }
 
@@ -109,8 +476,8 @@ public class NettyServerHandler extends ChannelInboundHandlerAdapter {
         ctx.close();
 
         //TODO: 同步杀掉进程
-
     }
+
 
     public static String getIPString(ChannelHandlerContext ctx){
         String ipString = "";
@@ -194,6 +561,12 @@ public class NettyServerHandler extends ChannelInboundHandlerAdapter {
             log.info("Error! e = {}", e);
             return;
         }
+    }
+
+
+    private String formatCurrentTimeStr(){
+        SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
+        return formatter.format(new Date()) + "-[INFO]: ";
     }
 
 }

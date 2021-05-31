@@ -1,6 +1,7 @@
 package com.optical.common;
 
 import org.springframework.util.StringUtils;
+import sun.misc.BASE64Decoder;
 
 import java.io.*;
 
@@ -77,6 +78,10 @@ public class EncodeUtil {
             sb.append(hv);
         }
         return sb.toString();
+    }
+
+    public static byte[] decryptBASE64(String v1) throws Exception {
+        return (new BASE64Decoder()).decodeBuffer(v1);
     }
 
     public static byte[] hexStringToBytes(String hexString) {

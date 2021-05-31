@@ -1,5 +1,6 @@
 package com.optical.component;
 
+import com.optical.Service.impl.ConfigServiceImpl;
 import com.optical.Service.impl.OpticalServiceImpl;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -11,10 +12,16 @@ import org.springframework.context.annotation.Bean;
 @ConfigurationProperties
 public class BeanConfig {
 
-/*    @Bean
+    @Bean
     public OpticalServiceImpl createOpticalServiceImpl() {
         OpticalServiceImpl opticalService = new OpticalServiceImpl();
         return opticalService;
     }
-    */
+
+    @Bean
+    public ConfigServiceImpl createConfigServiceImpl() {
+        ConfigServiceImpl configServiceImpl = new ConfigServiceImpl();
+        return configServiceImpl;
+    }
+
 }

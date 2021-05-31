@@ -11,12 +11,13 @@ spring:
      proxyTargetClass: true
      auto: true
   datasource:
-    url: jdbc:mysql://47.105.53.60:3306/fire_cloud_server?characterEncoding=UTF-8
-    username: tb
+    url: jdbc:mysql://47.105.53.60:3306/xt_config_server?characterEncoding=UTF-8
+    username: xt
     password: Ss!@#123
 
 mybatis:
-  mapper-locations: classpath*:sql/*Mapper.xml
+  #mapper-locations: classpath*:sql/*Mapper.xml
+  mapper-locations: classpath:sql/*Mapper.xml
   type-aliases-package: com.optical.bean
   configuration:
     # 全局启用或禁用延迟加载。当禁用时，所有关联对象都会即时加载。
