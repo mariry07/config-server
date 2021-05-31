@@ -27,7 +27,7 @@ public class AliCallUtil {
     }
 
     public static SingleCallByTtsResponse singleCallByTts() throws Exception {
-        com.aliyun.dyvmsapi20170525.Client client = AliCallUtil.createClient("LTAI4G4x6y9mGX3daHo6EgZV", "DE5cDCqpnBIsaCYHDXTWtn6fL8vutV");
+        com.aliyun.dyvmsapi20170525.Client client = AliCallUtil.createClient(getAccessKeyId(), getAccessKeySecret());
         SingleCallByTtsRequest singleCallByTtsRequest = new SingleCallByTtsRequest()
                 .setCalledNumber("18661712617")
                 .setTtsCode("TTS_212482029")
@@ -45,6 +45,14 @@ public class AliCallUtil {
                 .setPlayTimes(2);
         SingleCallByTtsResponse response = client.singleCallByTts(singleCallByTtsRequest);
         return response;
+    }
 
+
+    private String getAccessKeyId(){
+        return "";
+    }
+
+    private String getAccessKeySecret() {
+        return "";
     }
 }
