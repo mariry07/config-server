@@ -30,9 +30,9 @@ public class AliCallUtil {
     //accessKeyId 前半截 LTAI4G4x6y9
     //acdessKeyId 后半截 GX3daHo6EgZV
     //accessKeySecret 前半截 DE5cDCqpnBIsaCY
-    //accessKeySecret 后半截 HDXTWtn6fL8vutV
+    // accessKeySecret 后半截 HDXTWtn6fL8vutV
     public static SingleCallByTtsResponse singleCallByTts2Phone(String tgtPhone) throws Exception {
-        com.aliyun.dyvmsapi20170525.Client client = AliCallUtil.createClient("accessKeyId", "accessKeySecret");
+        com.aliyun.dyvmsapi20170525.Client client = AliCallUtil.createClient("accessKey", "accessKeySectet");
         SingleCallByTtsRequest singleCallByTtsRequest = new SingleCallByTtsRequest()
                 .setCalledNumber(tgtPhone)
                 .setTtsCode("TTS_212482029")
@@ -40,7 +40,6 @@ public class AliCallUtil {
         SingleCallByTtsResponse response = client.singleCallByTts(singleCallByTtsRequest);
         return response;
     }
-
 
 
 }
