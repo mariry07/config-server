@@ -26,6 +26,22 @@
     from xt_user
     where id = #{id,jdbcType=BIGINT}
   </select>
+
+  <select id="getByUserCode" parameterType="java.lang.String" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from xt_user
+    where user_code = #{userCode,jdbcType=VARCHAR}
+  </select>
+
+  <select id="getByVendorId" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from xt_user
+    where vendor_id = #{vendorId,jdbcType=BIGINT}
+    limit 1
+  </select>
+
   <update id="deleteById" parameterType="java.lang.Long">
     update xt_user
     set df = 1

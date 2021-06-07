@@ -7,7 +7,7 @@ import com.optical.bean.OpWebResult;
  */
 public interface FallDeviceService {
 
-    public OpWebResult getFallEventDeviceList(String deviceCode, String imei, Integer status,
+    public OpWebResult getFallEventDeviceList(Long vendorId, String deviceCode, String imei, Integer status,
                                               Integer page, Integer limit);
 
     public OpWebResult updatePhoneEnable(String deviceCode, Integer enable);

@@ -1,9 +1,13 @@
 package com.optical.controller;
 
+import com.optical.Service.LoginService;
+import com.optical.bean.LoginForm;
 import com.optical.bean.OpWebResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -20,12 +24,37 @@ public class LoginController {
 
     private static Logger log = LoggerFactory.getLogger(LoginController.class);
 
+    @Autowired
+    private LoginService loginService;
+
     @RequestMapping(value = "/login", method = {RequestMethod.POST, RequestMethod.GET})
     @ResponseBody
-    public OpWebResult login(String username, String password){
+    public OpWebResult login(@RequestBody LoginForm loginForm){
+
+        return loginService.login(loginForm);
+//        OpWebResult op = new OpWebResult(OpWebResult.OP_SUCCESS, OpWebResult.OpMsg.OP_SUCCESS);
+//        log.info("username: " + loginForm.getUsername() + ", password: " + loginForm.getPassword());
+//        Map map = new HashMap<>();
+//        map.put("token","admin-token");
+//        op.setData(map);
+//
+//        return op;
+    }
+
+    @RequestMapping(value = "/user/info", method = {RequestMethod.POST, RequestMethod.GET})
+    @ResponseBody
+    public OpWebResult userInfo(Long vendorId){
+
+        return loginService.userInfo(vendorId);
+
+    }
+
+    @RequestMapping(value = "/user/logout", method = {RequestMethod.POST, RequestMethod.GET})
+    @ResponseBody
+    public OpWebResult logout(String username, String password){
         OpWebResult op = new OpWebResult(OpWebResult.OP_SUCCESS, OpWebResult.OpMsg.OP_SUCCESS);
 
-        log.info("username: " + username + ", password: " + password);
+//        log.info("username: " + username + ", password: " + password);
 
         Map map = new HashMap<>();
         map.put("token","admin-token");
@@ -34,23 +63,4 @@ public class LoginController {
         return op;
     }
 
-    @RequestMapping(value = "/user/info", method = {RequestMethod.POST, RequestMethod.GET})
-    @ResponseBody
-    public OpWebResult userInfo(String token){
-        OpWebResult op = new OpWebResult(OpWebResult.OP_SUCCESS, OpWebResult.OpMsg.OP_SUCCESS);
-
-        log.info("token: " + token);
-
-        String[] strArr = new String[1];
-        strArr[0] = "admin";
-
-        Map map = new HashMap<>();
-        map.put("roles",strArr);
-        map.put("name","admin");
-        map.put("introduction", "demo user");
-        map.put("avatar", "https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fwww.17qq.com%2Fimg_qqtouxiang%2F88596391.jpeg&refer=http%3A%2F%2Fwww.17qq.com&app=2002&size=f9999,10000&q=a80&n=0&g=0n&fmt=jpeg?sec=1616925103&t=749646f1376cd7846e067f3fb1f39ebe");
-        op.setData(map);
-
-        return op;
-    }
 }

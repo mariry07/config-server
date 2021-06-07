@@ -22,14 +22,16 @@
     <result column="phone_enable" jdbcType="INTEGER" property="phoneEnable" />
     <result column="remarks" jdbcType="VARCHAR" property="remarks" />
     <result column="location" jdbcType="INTEGER" property="location" />
+    <result column="push_addr" jdbcType="VARCHAR" property="pushAddr" />
   </resultMap>
 
 
   <sql id="Base_Column_List">
     id, device_code, imei, ip, port, device_key, product_key, create_time, lastest_assign_time, 
     status, leave_ground_duration, on_ground_duration, confidence_threshold, sensor_fix_height,
-    cloud_upload_enable, phone_enable, phone, device_name, remarks, location
+    cloud_upload_enable, phone_enable, phone, device_name, remarks, location, push_addr
   </sql>
+
   <select id="getById" parameterType="java.lang.Long" resultMap="BaseResultMap">
     select 
     <include refid="Base_Column_List" />
@@ -71,7 +73,7 @@
 
 
   <select id="getAllDeviceCodeImei" resultMap="BaseResultMap">
-    select id, device_code, imei
+    select id, device_code, imei, push_addr, vendor_id
     from xt_terminal_imei_assign
     where df = 0
   </select>
@@ -208,6 +210,9 @@
   <select id="getListCountByCondition" parameterType="java.util.Map" resultType="java.lang.Integer">
     select count(*) from xt_terminal_imei_assign
     where df = 0
+    <if test="vendorId!=null">
+      and vendor_id = #{vendorId}
+    </if>
     <if test="deviceCode!=null and deviceCode != ''">
       and device_code = #{deviceCode}
     </if>
@@ -236,6 +241,9 @@
     select <include refid="Base_Column_List"/>
     from xt_terminal_imei_assign
     where df = 0
+    <if test="vendorId!=null">
+      and vendor_id = #{vendorId}
+    </if>
     <if test="deviceCode!=null and deviceCode != ''">
       and device_code = #{deviceCode}
     </if>

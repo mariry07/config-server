@@ -9,7 +9,7 @@ import org.springframework.stereotype.Controller;
  */
 public interface FallAlarmService {
 
-    public OpWebResult getFallEventDeviceList(String deviceCode, Integer page, Integer limit, Integer status);
+    public OpWebResult getFallEventDeviceList(Long vendorId, String deviceCode, Integer page, Integer limit, Integer status);
 
     public OpWebResult updateRealFall(String deviceCode);
 
@@ -18,4 +18,6 @@ public interface FallAlarmService {
     public OpWebResult updateDescription(Integer id, String description);
 
     public OpWebResult alarmTypeChange(Integer id, Integer type);
+
+
 }

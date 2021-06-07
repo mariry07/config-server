@@ -5,10 +5,7 @@ import com.aliyun.dyvmsapi20170525.models.SingleCallByTtsResponse;
 import com.optical.Service.impl.ConfigServiceImpl;
 import com.optical.Service.impl.EventServiceImpl;
 import com.optical.bean.*;
-import com.optical.common.AliCallUtil;
-import com.optical.common.ByteUtil;
-import com.optical.common.EncodeUtil;
-import com.optical.common.WebSocketService;
+import com.optical.common.*;
 import com.optical.mapper.TerminalAssignMapper;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
@@ -34,6 +31,7 @@ import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 
 import static com.optical.component.StaticMapRunner.staticMap;
+import static com.optical.component.StaticMapRunner.vendorPushMap;
 
 /**
  *
@@ -42,8 +40,6 @@ import static com.optical.component.StaticMapRunner.staticMap;
 @Slf4j
 @Mapper
 public class NettyServerHandler extends ChannelInboundHandlerAdapter {
-
-//    private Logger pointcloudLog = LoggerFactory.getLogger("pointcloudLog");
 
     private final BlockingQueue<String> list;
     //队列大小，先这么丑陋的写一下
@@ -124,7 +120,6 @@ public class NettyServerHandler extends ChannelInboundHandlerAdapter {
         }else{
             //处理业务时间数据包逻辑
             try{
-
                 //判断最后一位是 花括号} 0x7d.若不是,则说明是问题字符串，做折中处理
                 if(jsonStr.charAt(jsonStr.length() - 1) != 0x7d) {
                     //找到最后一个逗号，将它替换成"}",并且只保留之前的数据
@@ -132,7 +127,6 @@ public class NettyServerHandler extends ChannelInboundHandlerAdapter {
                     jsonStr += "}";
                 }
                 RadarEventBean reb = JSON.parseObject(jsonStr, RadarEventBean.class);
-
 
                 if(reb.getType() == 0) {
                     log.info("服务器收到消息: " + hexStr);
@@ -159,6 +153,20 @@ public class NettyServerHandler extends ChannelInboundHandlerAdapter {
                     rtnStr = JSON.toJSONString(rtnMap);
                     //刷新staticMap 中的设备最近一次信息上报事件
                     staticMap.put(reb.getDevice_code(), System.currentTimeMillis());
+                    if(!StringUtils.isEmpty(vendorPushMap.get(reb.getDevice_code()))) {
+                        //有推送地址，需进行推送
+                        Map map = new HashMap();
+                        map.put("type", 7);
+                        map.put("device_code", reb.getDevice_code());
+                        String param = JSON.toJSONString(map);
+                        log.info("### param: " + param);
+                        try{
+                            String jsionResult= HttpUtil.post("http://" + vendorPushMap.get(reb.getDevice_code()) + "/xitang/open/device/log/XTDYT3", param);
+                            log.info("### push heartbeat rtn: " + jsionResult);
+                        }catch (Exception e) {
+                            log.error("HeartBeatJob error! e={}", e);
+                        }
+                    }
 
                 }else if(reb.getType() == 1) {
                     log.info("服务器收到消息: " + hexStr);
@@ -181,6 +189,21 @@ public class NettyServerHandler extends ChannelInboundHandlerAdapter {
                     push.setData(reb.getDevice_code());
                     websocketServer.sendInfo(JSON.toJSONString(push), null);
 
+                    //3. 检查是否需要推送第三方
+                    if(!StringUtils.isEmpty(vendorPushMap.get(reb.getDevice_code()))) {
+                        reb.setUnique_id(System.currentTimeMillis());
+                        String param = JSON.toJSONString(reb);
+                        log.info("### param: " + param);
+                        try{
+                            String jsionResult= HttpUtil.post("http://" + vendorPushMap.get(reb.getDevice_code()) + "/xitang/open/device/log/XTDYT3",
+                                    param);
+                            log.info("### fall event: " + jsionResult);
+                        }catch (Exception e) {
+                            log.error("FallEventJob error! e={}", e);
+                        }
+                    }
+
+
                     // 2. TODO：报警丢队列，等待消费打电话。
                     String phone = getAlarmPhone(reb.getDevice_code());
                     if(!StringUtils.isEmpty(phone)) {
@@ -200,10 +223,24 @@ public class NettyServerHandler extends ChannelInboundHandlerAdapter {
                     //刷新staticMap 中的设备最近一次信息上报事件
                     staticMap.put(reb.getDevice_code(), System.currentTimeMillis());
 
+                    //推送第三方
+                    //3. 检查是否需要推送第三方
+                    if(!StringUtils.isEmpty(vendorPushMap.get(reb.getDevice_code()))) {
+                        reb.setUnique_id(System.currentTimeMillis());
+                        String param = JSON.toJSONString(reb);
+                        log.info("### param: " + param);
+                        try{
+                            String jsionResult= HttpUtil.post("http://" + vendorPushMap.get(reb.getDevice_code()) + "/xitang/open/device/log/XTDYT3",
+                                    param);
+                            log.info("### fall dismiss: " + jsionResult);
+                        }catch (Exception e) {
+                            log.error("FallEventJob error! e={}", e);
+                        }
+                    }
+
                     push.setShowWindow(1);
                     push.setData(reb.getDevice_code());
                     websocketServer.sendInfo(JSON.toJSONString(push), null);
-
 
                 }else if(reb.getType() == 3) {
                     log.info("服务器收到消息: " + hexStr);
@@ -231,6 +268,20 @@ public class NettyServerHandler extends ChannelInboundHandlerAdapter {
 
                     //刷新staticMap 中的设备最近一次信息上报事件
                     staticMap.put(reb.getDevice_code(), System.currentTimeMillis());
+
+                    //3. 检查是否需要推送第三方
+                    if(!StringUtils.isEmpty(vendorPushMap.get(reb.getDevice_code()))) {
+                        reb.setUnique_id(System.currentTimeMillis());
+                        String param = JSON.toJSONString(reb);
+                        log.info("### param: " + param);
+                        try{
+                            String jsionResult= HttpUtil.post("http://" + vendorPushMap.get(reb.getDevice_code()) + "/xitang/open/device/log/XTDYT3",
+                                    param);
+                            log.info("### human detect event: " + jsionResult);
+                        }catch (Exception e) {
+                            log.error("FallEventJob error! e={}", e);
+                        }
+                    }
 
                     push.setShowWindow(1);
                     push.setData(reb.getDevice_code());
@@ -277,6 +328,7 @@ public class NettyServerHandler extends ChannelInboundHandlerAdapter {
                 }
             }catch (Exception e) {
                 log.error("error! e: {}", e);
+                log.error("error info: " + jsonStr);
                 ctx.write("wrong json format");
                 ctx.flush();
             }

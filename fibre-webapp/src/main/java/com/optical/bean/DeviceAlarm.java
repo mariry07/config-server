@@ -281,4 +281,7 @@ public class DeviceAlarm {
     public void setVendorId(Long vendorId) {
         this.vendorId = vendorId;
     }
+
+
+
 }

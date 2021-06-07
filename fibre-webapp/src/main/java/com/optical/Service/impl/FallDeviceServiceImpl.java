@@ -33,7 +33,7 @@ public class FallDeviceServiceImpl implements FallDeviceService {
     private DeviceAlarmMapper deviceAlarmMapper;
 
     @Override
-    public OpWebResult getFallEventDeviceList(String deviceCode, String imei, Integer status,
+    public OpWebResult getFallEventDeviceList(Long vendoId, String deviceCode, String imei, Integer status,
                                               Integer page, Integer limit) {
         OpWebResult op = new OpWebResult(OpWebResult.OP_SUCCESS, OpWebResult.OpMsg.OP_SUCCESS);
         Map rtnMap = new HashMap<>();
@@ -46,6 +46,7 @@ public class FallDeviceServiceImpl implements FallDeviceService {
         }
         try{
             Map searchMap = new HashMap();
+            searchMap.put("vendorId", vendoId);
             searchMap.put("deviceCode", deviceCode);
             searchMap.put("imei", imei);
             searchMap.put("status", status);
@@ -59,7 +60,6 @@ public class FallDeviceServiceImpl implements FallDeviceService {
             rtnMap.put("total", total);
             rtnMap.put("list", list);
             op.setData(rtnMap);
-
 
         }catch (Exception e) {
             log.error("Exception! getFallEventDeviceList(). e = {}", e);

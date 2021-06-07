@@ -20,8 +20,8 @@ public class AlarmController {
 
     @RequestMapping(value = "/alarmList", method = {RequestMethod.POST, RequestMethod.GET})
     @ResponseBody
-    public OpWebResult getAlarmList(String deviceCode, Integer page, Integer limit, Integer status){
-        return fallAlarmService.getFallEventDeviceList(deviceCode, page, limit, status);
+    public OpWebResult getAlarmList(String deviceCode, Integer page, Integer limit, Integer status, Long vendorId){
+        return fallAlarmService.getFallEventDeviceList(vendorId, deviceCode, page, limit, status);
     }
 
     @RequestMapping(value = "/realFall", method = {RequestMethod.POST, RequestMethod.GET})
@@ -30,20 +30,19 @@ public class AlarmController {
         return fallAlarmService.updateRealFall(id);
     }
 
+    //误报、模拟摔、真摔
     @RequestMapping(value = "/type", method = {RequestMethod.POST, RequestMethod.GET})
     @ResponseBody
     public OpWebResult alarmTypeChange(Integer id, Integer type){
         return fallAlarmService.alarmTypeChange(id, type);
     }
 
-
+    //页面摔倒添加备注
     @RequestMapping(value = "/description", method = {RequestMethod.POST, RequestMethod.GET})
     @ResponseBody
     public OpWebResult updateDescription(Integer id, String description){
         return fallAlarmService.updateDescription(id, description);
     }
-
-
 
     @RequestMapping(value = "/wechatList", method = {RequestMethod.POST, RequestMethod.GET})
     @ResponseBody

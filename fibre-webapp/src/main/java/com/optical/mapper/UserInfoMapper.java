@@ -12,6 +12,10 @@ public interface UserInfoMapper {
 
     UserInfo getById(@Param("id") Long id);
 
+    UserInfo getByUserCode(@Param("userCode") String userCode);
+
+    UserInfo getByVendorId(@Param("vendorId") Long vendorId);
+
     Integer deleteById(@Param("id") Long id);
 
 

@@ -10,4 +10,6 @@ public interface OpenService {
 
     public OpWebResult openReceiver(RadarEventBean reb);
 
+    public OpWebResult freshStaticMap();
+
 }

@@ -3,6 +3,7 @@
 <mapper namespace="com.optical.mapper.DeviceAlarmMapper">
   <resultMap id="BaseResultMap" type="com.optical.bean.DeviceAlarm">
     <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="vendor_id" jdbcType="BIGINT" property="vendorId" />
     <result column="device_code" jdbcType="VARCHAR" property="deviceCode" />
     <result column="type" jdbcType="INTEGER" property="type" />
     <result column="confidence" jdbcType="INTEGER" property="confidence" />
@@ -30,7 +31,7 @@
 
   </resultMap>
   <sql id="Base_Column_List">
-    id, device_code, type, confidence, reason, frame_id, event_start_frame, event_end_frame, 
+    id, vendor_id, device_code, type, confidence, reason, frame_id, event_start_frame, event_end_frame,
     height_curr, height_before, status, deal_user_id, deal_detail, create_time, update_time, 
     deal_time, device_phone, phone_time, device_name, device_type, device_version, count,real_fall,
     description, df
@@ -43,7 +44,7 @@
   <!--</select>-->
 
   <insert id="insert" parameterType="com.optical.bean.DeviceAlarm">
-    insert into xt_device_alarm ( device_code, type,
+    insert into xt_device_alarm ( vendor_id, device_code, type,
       confidence, reason, frame_id, 
       event_start_frame, event_end_frame, height_curr, 
       height_before, status, deal_user_id, 
@@ -51,7 +52,7 @@
       deal_time, device_phone, phone_time, 
       device_name, device_type, device_version, 
       `count`, real_fall, df)
-    values ( #{deviceCode,jdbcType=VARCHAR}, #{type,jdbcType=INTEGER},
+    values (#{vendorId, jdbcType=BIGINT}, #{deviceCode,jdbcType=VARCHAR}, #{type,jdbcType=INTEGER},
       #{confidence,jdbcType=INTEGER}, #{reason,jdbcType=INTEGER}, #{frameId,jdbcType=BIGINT},
       #{eventStartFrame,jdbcType=BIGINT}, #{eventEndFrame,jdbcType=BIGINT}, #{heightCurr,jdbcType=DOUBLE},
       #{heightBefore,jdbcType=DOUBLE}, #{status,jdbcType=INTEGER}, #{dealUserId,jdbcType=BIGINT},
@@ -159,7 +160,7 @@
   <select id="getAll" parameterType="java.lang.String" resultMap="BaseResultMap">
     select *
     from xt_device_alarm
-    where `df` = 0
+    where `df` = 0 and vendor_id = #{vendorId}
     order by create_time DESC
   </select>
 
@@ -168,6 +169,9 @@
     select count(*)
     from xt_device_alarm
     where df = 0
+    <if test="vendorId!=null">
+      and vendor_id = #{vendorId}
+    </if>
     <if test="deviceCode!=null and deviceCode!=''">
       and device_code = #{deviceCode}
     </if>
@@ -181,6 +185,9 @@
     <include refid="Base_Column_List" />
     from xt_device_alarm
     where df = 0
+    <if test="vendorId!=null">
+      and vendor_id = #{vendorId}
+    </if>
     <if test="deviceCode!=null and deviceCode!=''">
       and device_code = #{deviceCode}
     </if>

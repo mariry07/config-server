@@ -26,10 +26,10 @@ public class DeviceController {
 
     @RequestMapping(value = "/deviceList", method = {RequestMethod.POST, RequestMethod.GET})
     @ResponseBody
-    public OpWebResult getDeviceList(String deviceCode, String imei, Integer status,
+    public OpWebResult getDeviceList(Long vendorId, String deviceCode, String imei, Integer status,
                                      Integer page, Integer limit){
         OpWebResult op = new OpWebResult(OpResult.OP_SUCCESS, OpResult.OpMsg.OP_SUCCESS);
-        return fallDeviceService.getFallEventDeviceList(deviceCode, imei, status, page, limit);
+        return fallDeviceService.getFallEventDeviceList(vendorId, deviceCode, imei, status, page, limit);
     }
 
 

@@ -39,6 +39,11 @@ public class TerminalAssign {
     private String remarks;
 
     /**
+     * 设备关联的第三方http推送地址 域名
+     */
+    private String pushAddr;
+
+    /**
      * 设备是否启用语音紧急呼叫 1启用 0不启用
      */
     private Integer phoneEnable;
@@ -215,5 +220,13 @@ public class TerminalAssign {
 
     public void setLocation(Integer location) {
         this.location = location;
+    }
+
+    public String getPushAddr() {
+        return pushAddr;
+    }
+
+    public void setPushAddr(String pushAddr) {
+        this.pushAddr = pushAddr;
     }
 }
