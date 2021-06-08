@@ -32,7 +32,9 @@ public class AliCallUtil {
     //accessKeySecret 前半截 DE5cDCqpnBIsaCY
     // accessKeySecret 后半截 HDXTWtn6fL8vutV
     public static SingleCallByTtsResponse singleCallByTts2Phone(String tgtPhone) throws Exception {
+
         com.aliyun.dyvmsapi20170525.Client client = AliCallUtil.createClient("accessKey", "accessKeySectet");
+
         SingleCallByTtsRequest singleCallByTtsRequest = new SingleCallByTtsRequest()
                 .setCalledNumber(tgtPhone)
                 .setTtsCode("TTS_212482029")
