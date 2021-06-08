@@ -62,7 +62,7 @@
         <!--<table tableName="xt_resident" domainObjectName="ResidentInfo" enableCountByExample="false" enableUpdateByExample="false" enableDeleteByExample="false" enableSelectByExample="false" selectByExampleQueryId="false">-->
         <!--</table>-->
 
-        <table tableName="xt_resident_log" domainObjectName="ResidentLog" enableCountByExample="false" enableUpdateByExample="false" enableDeleteByExample="false" enableSelectByExample="false" selectByExampleQueryId="false">
+        <table tableName="xt_device_status_log" domainObjectName="DeviceStatusLog" enableCountByExample="false" enableUpdateByExample="false" enableDeleteByExample="false" enableSelectByExample="false" selectByExampleQueryId="false">
         </table>
 
 

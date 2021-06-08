@@ -15,8 +15,8 @@ import java.util.Map;
  * Created by mary on 2021/5/19.
  */
 
-@Component
-@EnableScheduling
+//@Component
+//@EnableScheduling
 public class PushTask {
     private static Logger log = LoggerFactory.getLogger(PushTask.class);
 

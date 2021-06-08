@@ -2,6 +2,7 @@ package com.optical.component;
 
 import com.alibaba.fastjson.JSON;
 import com.aliyun.dyvmsapi20170525.models.SingleCallByTtsResponse;
+import com.optical.Service.DeviceStatusLogService;
 import com.optical.Service.impl.ConfigServiceImpl;
 import com.optical.Service.impl.EventServiceImpl;
 import com.optical.bean.*;
@@ -53,6 +54,7 @@ public class NettyServerHandler extends ChannelInboundHandlerAdapter {
 
     private ConfigServiceImpl configServiceImpl;
     private EventServiceImpl eventServiceImpl;
+    private DeviceStatusLogService deviceStatusLogService;
 //    private WebSocketService webSocketService;
 
 
@@ -237,7 +239,6 @@ public class NettyServerHandler extends ChannelInboundHandlerAdapter {
                             log.error("FallEventJob error! e={}", e);
                         }
                     }
-
                     push.setShowWindow(1);
                     push.setData(reb.getDevice_code());
                     websocketServer.sendInfo(JSON.toJSONString(push), null);
@@ -282,13 +283,11 @@ public class NettyServerHandler extends ChannelInboundHandlerAdapter {
                             log.error("FallEventJob error! e={}", e);
                         }
                     }
-
                     push.setShowWindow(1);
                     push.setData(reb.getDevice_code());
                     websocketServer.sendInfo(JSON.toJSONString(push), null);
 
                 }else if(reb.getType() == 5) {
-
                     Date date=new Date();
                     DateFormat format=new SimpleDateFormat("yyyy-MM-dd");
                     tmpName = reb.getDevice_code() + "_" +  format.format(date) +".dat";
@@ -321,10 +320,13 @@ public class NettyServerHandler extends ChannelInboundHandlerAdapter {
                     else{
                         log.info(srcName + " 修改为 " + tgtName + " 失败!");
                     }
-
                     //刷新staticMap 中的设备最近一次信息上报事件
                     staticMap.put(reb.getDevice_code(), System.currentTimeMillis());
-
+                }else if(reb.getType() == 8) {
+//                    log.info("服务器收到消息: " + hexStr);
+                    log.info("###### temperature: " + reb.getDevice_code() + ", " + jsonStr);
+                    deviceStatusLogService = SpringBeanUtil.getBean(DeviceStatusLogService.class);
+                    deviceStatusLogService.addDeviceStatusLog(reb);
                 }
             }catch (Exception e) {
                 log.error("error! e: {}", e);

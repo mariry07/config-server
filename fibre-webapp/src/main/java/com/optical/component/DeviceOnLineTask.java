@@ -19,8 +19,8 @@ import static com.optical.component.StaticMapRunner.staticMap;
 /**
  * Created by mary on 2021/5/20.
  */
-//@Component
-//@EnableScheduling
+@Component
+@EnableScheduling
 public class DeviceOnLineTask {
     private static Logger log = LoggerFactory.getLogger(DeviceOnLineTask.class);
 
