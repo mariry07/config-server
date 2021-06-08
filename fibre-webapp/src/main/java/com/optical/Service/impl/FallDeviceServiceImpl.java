@@ -231,10 +231,8 @@ public class FallDeviceServiceImpl implements FallDeviceService {
 
             Integer todayAlarm = deviceAlarmMapper.getAlarmCountSinceToday(zero);
 
-
             //未处理报警数
             Integer unhandleAlarm = deviceAlarmMapper.getUnhandledAlarmCount();
-
             rtnMap.put("total", total);
             rtnMap.put("online", onLine);
             rtnMap.put("todayAlarm", todayAlarm);
