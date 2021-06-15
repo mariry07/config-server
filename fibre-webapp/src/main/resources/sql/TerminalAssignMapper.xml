@@ -20,6 +20,7 @@
     <result column="lastest_assign_time" jdbcType="TIMESTAMP" property="lastestAssignTime" />
     <result column="status" jdbcType="INTEGER" property="status" />
     <result column="phone_enable" jdbcType="INTEGER" property="phoneEnable" />
+    <result column="status_report_enable" jdbcType="INTEGER" property="statusReportEnable" />
     <result column="remarks" jdbcType="VARCHAR" property="remarks" />
     <result column="location" jdbcType="INTEGER" property="location" />
     <result column="push_addr" jdbcType="VARCHAR" property="pushAddr" />
@@ -29,7 +30,7 @@
   <sql id="Base_Column_List">
     id, device_code, imei, ip, port, device_key, product_key, create_time, lastest_assign_time, 
     status, leave_ground_duration, on_ground_duration, confidence_threshold, sensor_fix_height,
-    cloud_upload_enable, phone_enable, phone, device_name, remarks, location, push_addr
+    cloud_upload_enable, phone_enable, phone, device_name, remarks, location, push_addr, status_report_enable
   </sql>
 
   <select id="getById" parameterType="java.lang.Long" resultMap="BaseResultMap">
@@ -65,7 +66,7 @@
 
   <select id="getConfigInfoByDeviceCode" resultMap="BaseResultMap">
     select id, device_code, leave_ground_duration, on_ground_duration,
-    confidence_threshold, sensor_fix_height, cloud_upload_enable
+    confidence_threshold, sensor_fix_height, cloud_upload_enable, status_report_enable
     from xt_terminal_imei_assign
     where device_code = #{deviceCode}
     limit 1
@@ -183,6 +184,17 @@
     where device_code = #{deviceCode}
   </update>
 
+
+
+  <update id="updateUploadPointCloud" >
+    update xt_terminal_imei_assign
+    <set>
+      <if test="cloudUploadEnable != null">
+      cloud_upload_enable = #{cloudUploadEnable},
+    </if>
+    </set>
+    where device_code = #{deviceCode}
+  </update>
 
   <update id="updateConfig"  >
     update xt_terminal_imei_assign

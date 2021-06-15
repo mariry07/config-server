@@ -23,5 +23,9 @@ public interface FallDeviceService {
 
     public OpWebResult getStatistic(Long vendorId);
 
+    public OpWebResult otaTriger(String deviceCode);
+
+    public OpWebResult pointCloudConfig(String deviceCode);
+
 
 }

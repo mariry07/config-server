@@ -50,4 +50,9 @@ socket:
  pool-max: 30
  pool-queue-init: 10
 
+#通用终端配置文件
+otafile:
+#  path: /ota/SG-KL2AIO01-11.0.0.0-20210607.bin
+  path: D:\\SG-KL2AIO01-11.0.0.0-20210607.bin
+
 

@@ -68,6 +68,9 @@ public class EncodeUtil {
     }
 
     public static String binary2Hex(byte[] bytArr) {
+        if(bytArr == null) {
+            return "";
+        }
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < bytArr.length; i++) {
             int v = bytArr[i] & 0xFF;

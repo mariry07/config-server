@@ -161,6 +161,9 @@ public class ByteUtil {
 
     public static String getString(byte[] bytes, String charsetName)
     {
+        if(bytes == null) {
+            return "";
+        }
         return new String(bytes, Charset.forName(charsetName));
     }
 

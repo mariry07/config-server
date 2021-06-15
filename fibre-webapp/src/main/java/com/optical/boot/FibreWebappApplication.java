@@ -52,7 +52,7 @@ public class FibreWebappApplication {
 		//配置服务器 11002 端口
 //        nettyServer.start(new InetSocketAddress("127.0.0.1", 11002));
 
-			//配置服务器 11002 端口
+		//配置服务器 11002 端口
 		nettyServer.start(new InetSocketAddress("172.31.243.186", 11002));
 //
         //业务模拟服务器 11003 端口
@@ -62,8 +62,8 @@ public class FibreWebappApplication {
 //		ApplicationContext context = SpringApplication.run(FibreWebappApplication.class, args);
 //		log.info("=======================here start FibreWebappApplication! ===========================");
 //		context.getBean(SocketRunner.class).runrun();
-
 	}
+
 
 
 //

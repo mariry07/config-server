@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.io.Serializable;
@@ -244,6 +245,92 @@ public class FallDeviceServiceImpl implements FallDeviceService {
             log.error("Exception! getStatistic(). e = {}", e);
             op.setResult(OpWebResult.OP_FAILED);
             op.setMsg(OpWebResult.OpMsg.OP_FAIL);
+        }
+        return op;
+    }
+
+    @Override
+    public OpWebResult otaTriger(String deviceCode) {
+
+        OpWebResult op = new OpWebResult(OpWebResult.OP_SUCCESS, OpWebResult.OpMsg.MODIFY_SUCCESS);
+        if(StringUtils.isEmpty(deviceCode) ){
+            op.setResult(OpWebResult.OP_FAILED);
+            op.setMsg("deviceCode不可为空！");
+            return op;
+        }
+        try{
+            //向设备下发ota触发json
+            ChannelHandlerContext ctx = NettyServer.getCtxMap().get(deviceCode);
+            if(ctx != null) {
+                Map deliverMap = new HashMap();
+                deliverMap.put("type", 9);
+                deliverMap.put("upgrade", 1);
+                deliverMap.put("device_code", deviceCode);
+
+                log.info("ota triger deliver: " + JSON.toJSONString(deliverMap));
+                ctx.write(JSON.toJSONString(deliverMap));
+                ctx.flush();
+            }else{
+                log.error("NettyServer.getCtxMap() is null! deviceCode: " + deviceCode);
+                op.setMsg("无法获取与设备的连接，ota启动命令下发失败");
+                op.setResult(OpWebResult.OP_FAILED);
+            }
+
+        }catch (Exception e) {
+            log.error("updateConfig ERROR: e={}", e);
+            op.setMsg(OpWebResult.OpMsg.MODIFY_FAIL);
+            op.setResult(OpWebResult.OP_FAILED);
+        }
+
+        return op;
+    }
+
+    @Override
+    public OpWebResult pointCloudConfig(String deviceCode) {
+
+        OpWebResult op = new OpWebResult(OpWebResult.OP_SUCCESS, OpWebResult.OpMsg.MODIFY_SUCCESS);
+        if(StringUtils.isEmpty(deviceCode) ){
+            op.setResult(OpWebResult.OP_FAILED);
+            op.setMsg("deviceCode不可为空！");
+            return op;
+        }
+        try{
+
+            Map searchMap = new HashMap();
+            searchMap.put("deviceCode", deviceCode);
+            List<TerminalAssign> taList = terminalAssignMapper.getListByCondition(searchMap);
+            if(CollectionUtils.isEmpty(taList)) return op;
+            TerminalAssign ta = taList.get(0);
+
+            // 1. 修改数据库 上传标志
+            Integer uploadCloud = ta.getCloudUploadEnable();
+            uploadCloud ^= 1;
+            terminalAssignMapper.updateUploadPointCloud(deviceCode, uploadCloud);
+
+            ////2. 向设备下发配置json
+            ChannelHandlerContext ctx = NettyServer.getCtxMap().get(deviceCode);
+            if(ctx != null) {
+                Map deliverMap = new HashMap();
+                deliverMap.put("result", 1);
+                deliverMap.put("msg", "success");
+                deliverMap.put("type", 3);
+                deliverMap.put("unique_id", "server-triger-v1.0.0");
+                deliverMap.put("leave_ground_duration", Math.round(ta.getLeaveGroundDuration() * 100));
+                deliverMap.put("senser_fix_height", Math.round(ta.getSensorFixHeight() * 100) );
+                deliverMap.put("on_ground_duration", Math.round(ta.getOnGroundDuration() * 100));
+                deliverMap.put("confidence_threshold", Math.round(ta.getConfidenceThreshold() * 100));
+                deliverMap.put("cloud_upload_enable", uploadCloud);
+
+                log.info("config deliver: " + JSON.toJSONString(deliverMap));
+                ctx.write(JSON.toJSONString(deliverMap));
+                ctx.flush();
+            }else{
+                log.error("NettyServer.getCtxMap() is null! deviceCode: " + deviceCode);
+            }
+        }catch (Exception e) {
+            log.error("updateConfig ERROR: e={}", e);
+            op.setMsg(OpWebResult.OpMsg.MODIFY_FAIL);
+            op.setResult(OpWebResult.OP_FAILED);
         }
         return op;
     }

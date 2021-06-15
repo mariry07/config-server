@@ -45,7 +45,6 @@ public class EventServiceImpl implements EventService {
         OpResult op = new OpResult(OpResult.OP_SUCCESS, OpResult.OpMsg.OP_SUCCESS);
         String rtnStr = "";
 
-
         try{
             DeviceAlarm alarm = new DeviceAlarm();
             String deviceName = terminalAssignMapper.getDeviceName(reb.getDevice_code());

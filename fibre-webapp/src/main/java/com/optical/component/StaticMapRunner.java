@@ -29,6 +29,8 @@ public class StaticMapRunner implements ApplicationRunner {
 
     public static final Map<String, String> vendorPushMap = new ConcurrentHashMap<>();
 
+    public static final Map<String, String> otaProcessMap = new ConcurrentHashMap<>();
+
     @Autowired
     private TerminalAssignMapper terminalAssignMapper;
 

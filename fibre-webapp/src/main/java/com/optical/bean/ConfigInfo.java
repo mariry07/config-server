@@ -30,6 +30,8 @@ public class ConfigInfo  implements Serializable {
 
     private String device_key;
 
+    private int timestamp;
+
 
     public ConfigInfo() {}
 
@@ -109,6 +111,14 @@ public class ConfigInfo  implements Serializable {
 
     public void setVendorId(Long vendorId) {
         this.vendorId = vendorId;
+    }
+
+    public int getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(int timestamp) {
+        this.timestamp = timestamp;
     }
 
     public static final class OpMsg {

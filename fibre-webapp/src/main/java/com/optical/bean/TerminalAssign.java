@@ -38,6 +38,8 @@ public class TerminalAssign {
 
     private String remarks;
 
+    private Integer statusReportEnable;
+
     /**
      * 设备关联的第三方http推送地址 域名
      */
@@ -229,4 +231,14 @@ public class TerminalAssign {
     public void setPushAddr(String pushAddr) {
         this.pushAddr = pushAddr;
     }
+
+    public Integer getStatusReportEnable() {
+        return statusReportEnable;
+    }
+
+    public void setStatusReportEnable(Integer statusReportEnable) {
+        this.statusReportEnable = statusReportEnable;
+    }
+
+
 }

@@ -50,6 +50,22 @@ public class DeviceController {
         return fallDeviceService.updatePhoneEnable(deviceCode, phoneEnable);
     }
 
+    @RequestMapping(value = "/otaTriger", method = {RequestMethod.POST, RequestMethod.GET})
+    @ResponseBody
+    public OpWebResult otaTriger(String deviceCode){
+        OpWebResult op = new OpWebResult(OpResult.OP_SUCCESS, OpResult.OpMsg.OP_SUCCESS);
+        log.info("otaTriger deviceCode: " + deviceCode);
+        return fallDeviceService.otaTriger(deviceCode);
+    }
+
+    @RequestMapping(value = "/pointCloudConfig", method = {RequestMethod.POST, RequestMethod.GET})
+    @ResponseBody
+    public OpWebResult pointCloudConfig(String deviceCode){
+        OpWebResult op = new OpWebResult(OpResult.OP_SUCCESS, OpResult.OpMsg.OP_SUCCESS);
+        log.info("pointCloudConfig deviceCode: " + deviceCode);
+        return fallDeviceService.pointCloudConfig(deviceCode);
+    }
+
 
     @RequestMapping(value = "/nameChange", method = {RequestMethod.POST, RequestMethod.GET})
     @ResponseBody

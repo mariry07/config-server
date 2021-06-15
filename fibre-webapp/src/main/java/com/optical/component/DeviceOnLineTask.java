@@ -28,7 +28,7 @@ public class DeviceOnLineTask {
     private TerminalAssignMapper terminalAssignMapper;
 
 
-    @Scheduled(cron = "0/20 * * * * ?")
+    @Scheduled(cron = "0/30 * * * * ?")
     public void OnLineCheckJob() {
         log.info("entered OnLineCheckJob......");
         // 检查线：最近一次信息上传发生在一分钟以内

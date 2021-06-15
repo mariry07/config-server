@@ -19,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.ws.server.EndpointAdapter;
@@ -30,7 +31,10 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
+import java.util.zip.CRC32;
+import java.util.zip.CheckedInputStream;
 
+import static com.optical.component.StaticMapRunner.otaProcessMap;
 import static com.optical.component.StaticMapRunner.staticMap;
 import static com.optical.component.StaticMapRunner.vendorPushMap;
 
@@ -41,6 +45,11 @@ import static com.optical.component.StaticMapRunner.vendorPushMap;
 @Slf4j
 @Mapper
 public class NettyServerHandler extends ChannelInboundHandlerAdapter {
+
+
+    private String OTA_FILE_PATH = "/ota/SG-KL2AIO01-11.0.0.0-20210610V1.01.bin";
+//    private String OTA_FILE_PATH = "D:\\SG-KL2AIO01-11.0.0.0-20210607.bin";
+
 
     private final BlockingQueue<String> list;
     //队列大小，先这么丑陋的写一下
@@ -90,6 +99,7 @@ public class NettyServerHandler extends ChannelInboundHandlerAdapter {
         String rtnStr = "";
         String devicePhone = "";
         String tmpName = "";
+        String atCmd = "";
 
         //按照16进制发送时，在ServiceChannelInitializer类里需取消自动按照UTF-8来decode，以防止出现乱码
         ByteBuf buf = (ByteBuf) msg;
@@ -97,6 +107,9 @@ public class NettyServerHandler extends ChannelInboundHandlerAdapter {
         buf.readBytes(receiveMsgBytes);
         String hexStr = EncodeUtil.binary2Hex(receiveMsgBytes);
         String jsonStr = ByteUtil.getString(receiveMsgBytes, "utf-8") + "}";
+
+        log.info("服务器收到消息: " + hexStr);
+        log.info("jsonStr: " + jsonStr);
 
         String logInfo = formatCurrentTimeStr() + "服务器收到消息: " + jsonStr;
         WebSocketMsg push = new WebSocketMsg(2, 0, logInfo);
@@ -107,6 +120,132 @@ public class NettyServerHandler extends ChannelInboundHandlerAdapter {
             ctx.flush();
             return;
         }
+
+        if(jsonStr.equals("}")) {
+//            if(jsonStr.contains("ok")) {
+            //根据otaProcessStage 判断下一步操作
+            log.info("here in jsonStr = nothing");
+
+            //根据otaProcessMap 的stage 判断下一步操作
+            //ota stage ：test  -  test op - file info - transfer  -  transfer end  -  end ota
+            // 数字：      0    -   1      -   2       -   30~31   -       4        -      5
+            Integer curStage = Integer.parseInt(otaProcessMap.get("stage"));
+            if(curStage == 0) {
+                log.info("####### current stage: 0, will deliver at_test, at_op_set");
+                curStage = 1;
+                otaProcessMap.put("stage", curStage.toString());
+
+                //测试时的临时解决方案：
+                ChannelHandlerContext tmpCtx = NettyServer.getCtxMap().get(otaProcessMap.get("deviceCode"));
+                if(tmpCtx != null) {
+                    tmpCtx.write(formatCmd(XTConstants.WQ_CMD.AT_TEST, XTConstants.WQ_CMD.AT_OP_SET, null, null, null));
+                    tmpCtx.flush();
+                }else{
+                    ctx.write(formatCmd(XTConstants.WQ_CMD.AT_TEST, XTConstants.WQ_CMD.AT_OP_SET, null, null, null));
+                    ctx.flush();
+                }
+
+//                ctx.write(formatCmd(XTConstants.WQ_CMD.AT_TEST, XTConstants.WQ_CMD.AT_OP_SET, null, null, null));
+//                ctx.flush();
+
+                return;
+
+            }else if(curStage == 1) {
+                log.info("####### current stage: 1, will deliver file crc, file size, pack size");
+                //下发文件信息
+                curStage = 2;
+                otaProcessMap.put("stage", curStage.toString());
+
+//                File file = new File("D:\\SG-KL2AIO01-11.0.0.0-20210607.bin");
+                File file = new File(OTA_FILE_PATH);
+
+                Long fileSize = file.length();
+                String crc32 = getCRC32Str(file);
+                String packSize = "1000";
+
+                //测试时的临时解决方案：
+                ChannelHandlerContext tmpCtx = NettyServer.getCtxMap().get(otaProcessMap.get("deviceCode"));
+                if(tmpCtx != null) {
+                    tmpCtx.write(formatCmd(XTConstants.WQ_CMD.AT_FWINFO, XTConstants.WQ_CMD.AT_OP_SET, null, null, null));
+                    tmpCtx.flush();
+                }else {
+                    ctx.write(formatCmd(XTConstants.WQ_CMD.AT_FWINFO, XTConstants.WQ_CMD.AT_OP_SET, Long.toString(fileSize), crc32, packSize));
+                    ctx.flush();
+                }
+
+
+
+//                ctx.write(formatCmd(XTConstants.WQ_CMD.AT_FWINFO, XTConstants.WQ_CMD.AT_OP_SET, Long.toString(fileSize), crc32, packSize));
+//                ctx.flush();
+                return;
+
+            }else if(curStage >= 2 && curStage < 4) {
+                log.info("####### current stage: 2 , 3x, will deliver file");
+                // 传输升级包
+                //TODO: 根据本次下发数据量大小是否 <1000 判断 是否跳转升级stage
+                Long i = Long.parseLong(otaProcessMap.get("count"));
+                FileInputStream fis = new FileInputStream(OTA_FILE_PATH);
+
+                //指定位置
+                fis.skip(i * 1000);
+                //指定长度
+                byte[] filebuf = new byte[1000];
+                byte[] infoBuf;
+                int len = fis.read(filebuf);
+                infoBuf = new byte[len];
+                System.arraycopy(filebuf, 0, infoBuf, 0, len);
+                String hexString = EncodeUtil.binary2Hex(infoBuf);
+                String thisCrc = getByteCRC32Str(infoBuf);
+                i ++;
+                otaProcessMap.put("count", i.toString());
+
+                //若是最后一个数据包，则下一次将需要跳转stage，则将stage置为4
+                if(len < 1000) {
+                    otaProcessMap.put("stage", "4");
+                    //计数器复位
+                    otaProcessMap.put("count", "0");
+                }
+
+
+                //测试时的临时解决方案：
+                ChannelHandlerContext tmpCtx = NettyServer.getCtxMap().get(otaProcessMap.get("deviceCode"));
+                if(tmpCtx != null) {
+                    tmpCtx.write(formatCmd(XTConstants.WQ_CMD.AT_FWTR, XTConstants.WQ_CMD.AT_OP_SET, Long.toString(i), thisCrc, hexString));
+                    tmpCtx.flush();
+                }else{
+                    ctx.write(formatCmd(XTConstants.WQ_CMD.AT_FWTR, XTConstants.WQ_CMD.AT_OP_SET, Long.toString(i), thisCrc, hexString));
+                    ctx.flush();
+                }
+
+
+//                ctx.write(formatCmd(XTConstants.WQ_CMD.AT_FWTR, XTConstants.WQ_CMD.AT_OP_SET, Long.toString(i), thisCrc, hexString));
+//                ctx.flush();
+                return;
+            }else if(curStage == 4) {
+                log.info("####### current stage: 4 , will transfer end msg");
+                //测试时的临时解决方案：
+                ChannelHandlerContext tmpCtx = NettyServer.getCtxMap().get(otaProcessMap.get("deviceCode"));
+                if(tmpCtx != null) {
+                    tmpCtx.write(formatCmd(XTConstants.WQ_CMD.AT_FWFNS, XTConstants.WQ_CMD.AT_OP_EXE, null, null, null));
+                    tmpCtx.flush();
+                }else {
+                    ctx.write(formatCmd(XTConstants.WQ_CMD.AT_FWFNS, XTConstants.WQ_CMD.AT_OP_EXE, null, null, null));
+                    ctx.flush();
+                }
+
+
+                //下发 end 指令
+//                ctx.write(formatCmd(XTConstants.WQ_CMD.AT_FWFNS, XTConstants.WQ_CMD.AT_OP_EXE, null, null, null));
+//                ctx.flush();
+                curStage = 5;
+                otaProcessMap.put("stage", curStage.toString());
+                return;
+            }else {
+                log.info("unknown curStage: " + curStage);
+                return;
+            }
+        }
+
 
         //判断是否是心跳信息
         if(jsonStr.contains("$$$")) {
@@ -143,6 +282,7 @@ public class NettyServerHandler extends ChannelInboundHandlerAdapter {
                         NettyServer.getCtxMap().put(ci.getDevice_code(), ctx);
                         log.info("NettyServer.getCtxMap().put(ci.getDevice_code(): " + ci.getDevice_code() + ")");
                     }
+                    ci.setTimestamp((int) (System.currentTimeMillis() / 1000));
                     rtnStr = JSON.toJSONString(ci);
 
                 }else if(reb.getType() == 7) {
@@ -155,6 +295,7 @@ public class NettyServerHandler extends ChannelInboundHandlerAdapter {
                     rtnStr = JSON.toJSONString(rtnMap);
                     //刷新staticMap 中的设备最近一次信息上报事件
                     staticMap.put(reb.getDevice_code(), System.currentTimeMillis());
+                    NettyServer.getCtxMap().put(reb.getDevice_code(), ctx);
                     if(!StringUtils.isEmpty(vendorPushMap.get(reb.getDevice_code()))) {
                         //有推送地址，需进行推送
                         Map map = new HashMap();
@@ -169,6 +310,42 @@ public class NettyServerHandler extends ChannelInboundHandlerAdapter {
                             log.error("HeartBeatJob error! e={}", e);
                         }
                     }
+
+                }if(reb.getType() == 9) {
+                    log.info("jsonStr: " + jsonStr);
+                    //todo: 测试期之后要放开
+//                    NettyServer.getCtxMap().put(reb.getDevice_code(), ctx);
+
+                    //ota确认事件
+                    //开始进入ota
+                    //ota stage ：test  -  test op - file info - transfer  -  transfer end  -  end ota
+                    // 数字：      0    -   1      -   2       -   30~31   -       4        -      5
+
+                    otaProcessMap.put("stage", "0");
+                    //升级包部分传送的数量 在进入 transfer stage 之前，都是0
+                    otaProcessMap.put("count", "0");
+                    //为了保存当前升级设备deviceCode，一遍保持ctx
+                    otaProcessMap.put("deviceCode", reb.getDevice_code());
+
+                    //TODO： 临时测试注释掉，正常后放开，组装test cmd 字符串，并下发
+//                    ctx.write(formatCmd(XTConstants.WQ_CMD.AT_TEST, XTConstants.WQ_CMD.AT_OP_TEST, null, null, null));
+//                    ctx.flush();
+
+                    //TODO： 测试临时方案 稳定后待删除
+                    ChannelHandlerContext tmpCtx = NettyServer.getCtxMap().get(reb.getDevice_code());
+                    if(tmpCtx != null) {
+                        log.info("use tmpCtx");
+                        tmpCtx.write(formatCmd(XTConstants.WQ_CMD.AT_TEST, XTConstants.WQ_CMD.AT_OP_TEST, null, null, null));
+                        tmpCtx.flush();
+                    }else{
+                        log.info("tmpCtx is null, use current ctx instead");
+                        //要是没数据，还要用这个
+                        ctx.write(formatCmd(XTConstants.WQ_CMD.AT_TEST, XTConstants.WQ_CMD.AT_OP_TEST, null, null, null));
+                        ctx.flush();
+                    }
+
+
+                    return;
 
                 }else if(reb.getType() == 1) {
                     log.info("服务器收到消息: " + hexStr);
@@ -204,7 +381,6 @@ public class NettyServerHandler extends ChannelInboundHandlerAdapter {
                             log.error("FallEventJob error! e={}", e);
                         }
                     }
-
 
                     // 2. TODO：报警丢队列，等待消费打电话。
                     String phone = getAlarmPhone(reb.getDevice_code());
@@ -323,6 +499,7 @@ public class NettyServerHandler extends ChannelInboundHandlerAdapter {
                     //刷新staticMap 中的设备最近一次信息上报事件
                     staticMap.put(reb.getDevice_code(), System.currentTimeMillis());
                 }else if(reb.getType() == 8) {
+
 //                    log.info("服务器收到消息: " + hexStr);
                     log.info("###### temperature: " + reb.getDevice_code() + ", " + jsonStr);
                     deviceStatusLogService = SpringBeanUtil.getBean(DeviceStatusLogService.class);
@@ -421,6 +598,7 @@ public class NettyServerHandler extends ChannelInboundHandlerAdapter {
                 // 注：因嵌入式上是er，故下面的senser必须是er，与嵌入式一致。
                 rtnMap.put("senser_fix_height", Math.round(ta.getSensorFixHeight() * 100));
                 rtnMap.put("cloud_upload_enable", ta.getCloudUploadEnable());
+                rtnMap.put("status_report_enable", ta.getStatusReportEnable());
             }
 
         }catch (Exception e) {
@@ -621,6 +799,47 @@ public class NettyServerHandler extends ChannelInboundHandlerAdapter {
     private String formatCurrentTimeStr(){
         SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
         return formatter.format(new Date()) + "-[INFO]: ";
+    }
+
+
+    private String formatCmd(String cmd, String op, String query1, String query2, String query3) {
+//  private byte[] formatCmd(String cmd, String op, String query1, String query2, String query3) {
+        String at_cmd = "";
+
+        StringBuffer sb = new StringBuffer();
+        sb.append(XTConstants.WQ_CMD.AT_HEAD).append(cmd).append(op);
+        if(!StringUtils.isEmpty(query1)) {
+            sb.append(query1);
+        }
+        if(!StringUtils.isEmpty(query2)) {
+            sb.append(",").append(query2);
+        }
+        if(!StringUtils.isEmpty(query3)) {
+            sb.append(",").append(query3);
+        }
+        sb.append(XTConstants.WQ_CMD.AT_END);
+
+//        byte[] deliverInfo = ByteUtil.getBytes(sb.toString(), "utf-8");
+//        return deliverInfo;
+        return sb.toString();
+    }
+
+    //获取crc32结果 字符串
+    public static String getCRC32Str(File file) throws IOException {
+        CRC32 crc32 = new CRC32();
+        FileInputStream fileinputstream = new FileInputStream(file);
+        CheckedInputStream checkedinputstream = new CheckedInputStream(fileinputstream, crc32);
+        while (checkedinputstream.read() != -1) {
+        }
+        checkedinputstream.close();
+        return Long.toHexString(crc32.getValue());
+    }
+
+    //获取crc32结果 字符串
+    public static String getByteCRC32Str(byte[] buf) throws IOException {
+        CRC32 crc32 = new CRC32();
+        crc32.update(buf);
+        return Long.toHexString(crc32.getValue());
     }
 
 }
