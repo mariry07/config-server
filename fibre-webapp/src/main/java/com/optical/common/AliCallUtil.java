@@ -27,7 +27,7 @@ public class AliCallUtil {
     }
 
 
-    //accessKeyId 前半截 LTAI4G4x6y9
+    //accessKeyId 前半截 LTAI4G4x6y9m
     //acdessKeyId 后半截 GX3daHo6EgZV
     //accessKeySecret 前半截 DE5cDCqpnBIsaCY
     // accessKeySecret 后半截 HDXTWtn6fL8vutV
@@ -43,5 +43,17 @@ public class AliCallUtil {
         return response;
     }
 
+    private static String getAccessKeyId() {
+        StringBuffer sb = new StringBuffer();
+        sb.append("LTAI4G4x6y9m")
+                .append("GX3daHo6EgZV");
+        return sb.toString();
+    }
+    private static String getAccessKeySecret() {
+        StringBuffer sb = new StringBuffer();
+        sb.append("DE5cDCqpnBIsaC")
+                .append("YHDXTWtn6fL8vutV");
+        return sb.toString();
+    }
 
 }
