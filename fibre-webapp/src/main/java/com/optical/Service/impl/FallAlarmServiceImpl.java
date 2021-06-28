@@ -15,6 +15,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.optical.component.StaticMapRunner.vendorDeviceMap;
+
 /**
  * Created by mary on 2021/3/24.
  */
@@ -29,7 +31,7 @@ public class FallAlarmServiceImpl implements FallAlarmService {
     private ResidentInfoMapper residentInfoMapper;
 
     @Override
-    public OpWebResult getFallEventDeviceList(String deviceCode, Integer page, Integer limit, Integer status) {
+    public OpWebResult getFallEventDeviceList(Long vendorId, String deviceCode, Integer page, Integer limit, Integer status) {
 
         OpWebResult op = new OpWebResult(OpWebResult.OP_SUCCESS, OpWebResult.OpMsg.OP_SUCCESS);
         Integer start = null;
@@ -43,9 +45,9 @@ public class FallAlarmServiceImpl implements FallAlarmService {
         }
         try{
 
-            Integer total = deviceAlarmMapper.getDataCountByCondition(deviceCode, status);
+            Integer total = deviceAlarmMapper.getDataCountByCondition(vendorId, deviceCode, status);
             if(total > 0) {
-                list = deviceAlarmMapper.getDataByCondition(deviceCode, status, start, limit);
+                list = deviceAlarmMapper.getDataByCondition(vendorId, deviceCode, status, start, limit);
             }
             rtnMap.put("total", total);
             rtnMap.put("list", list);
@@ -95,9 +97,9 @@ public class FallAlarmServiceImpl implements FallAlarmService {
         try{
 
             //TODO: 小程序仅查今日报警
-            Integer total = deviceAlarmMapper.getDataCountByCondition(deviceCode, status);
+            Integer total = deviceAlarmMapper.getDataCountByCondition(vendorDeviceMap.get(deviceCode), deviceCode, status);
             if(total > 0) {
-                list = deviceAlarmMapper.getDataByCondition(deviceCode, status, start, limit);
+                list = deviceAlarmMapper.getDataByCondition(vendorDeviceMap.get(deviceCode), deviceCode, status, start, limit);
                 for(DeviceAlarm da: list) {
                     String residentName = residentInfoMapper.getNameByResidentDeviceCode(da.getDeviceCode());
                     da.setRemarks(residentName);
@@ -112,7 +114,6 @@ public class FallAlarmServiceImpl implements FallAlarmService {
             op.setResult(OpWebResult.OP_FAILED);
             op.setMsg(OpWebResult.OpMsg.OP_FAIL);
         }
-
         return op;
     }
 
@@ -145,4 +146,5 @@ public class FallAlarmServiceImpl implements FallAlarmService {
         }
         return op;
     }
+
 }

@@ -28,18 +28,17 @@ public class PushTask {
 
 
 
-
-
-
     // 福寿康 设备心跳模拟
 //    @Scheduled(cron = "0/12 * * * * ?")
-    @Scheduled(cron = "0/14 0-30 17 25 * ?")
+//    @Scheduled(cron = "0/14 0-30 17 25 * ?")
+//    @Scheduled(cron = "0/15 53-55 9 * * ?")
     public void HeartBeatJob() {
 
         Map map = new HashMap();
         map.put("type", 7);
         map.put("device_code", "xtd20211700012");
         String param = JSON.toJSONString(map);
+        log.info("### param: " + param);
         try{
             String jsionResult= HttpUtil.post("http://" + uri + "/xitang/open/device/log/XTDYT3", param);
 
@@ -52,7 +51,8 @@ public class PushTask {
 
 //     福寿康 设备报警模拟
 //    @Scheduled(cron = "0/15 * * * * ?")
-    @Scheduled(cron = "0/15 0-30 17 25 * ?")
+//    @Scheduled(cron = "0/15 0-30 17 25 * ?")
+    @Scheduled(cron = "0/15 15-17 11 * * ?")
     public void FallEventJob() {
 
         Map map = new HashMap();
@@ -70,6 +70,7 @@ public class PushTask {
         map.put("height_before", height - 0.8);
 
         String param = JSON.toJSONString(map);
+        log.info("### param: " + param);
         try{
             String jsionResult= HttpUtil.post("http://" + uri + "/xitang/open/device/log/XTDYT3",
                     param);
@@ -82,7 +83,8 @@ public class PushTask {
 
 //     福寿康 消警事件
 //    @Scheduled(cron = "0/13 * * * * ?")
-    @Scheduled(cron = "0/16 0-30 17 25 * ?")
+//    @Scheduled(cron = "0/16 0-30 17 25 * ?")
+    @Scheduled(cron = "0/15 41-43 9 * * ?")
     public void RaiseEventJob() {
 
         Map map = new HashMap();
@@ -91,13 +93,11 @@ public class PushTask {
         map.put("unique_id", System.currentTimeMillis());
         map.put("reason", 0);
 
-
         String param = JSON.toJSONString(map);
         try{
-            String jsionResult= HttpUtil.post("http://" + uri + "/xitang/open/device/log/XTDYT3",
+            String jsionResult = HttpUtil.post("http://" + uri + "/xitang/open/device/log/XTDYT3",
                     param);
-
-            log.info("raise event: "+jsionResult);
+            log.info("raise event: " + jsionResult);
 
         }catch (Exception e) {
             log.error("RaiseEventJob error! e={}", e);
@@ -107,7 +107,8 @@ public class PushTask {
 
 //     福寿康 人员出现事件
 //    @Scheduled(cron = "0/16 * * * * ?")
-    @Scheduled(cron = "0/17 0-30 17 25 * ?")
+//    @Scheduled(cron = "0/17 0-30 17 25 * ?")
+    @Scheduled(cron = "0/15 46-48 9 * * ?")
     public void HumanDetectJob() {
 
         Map map = new HashMap();

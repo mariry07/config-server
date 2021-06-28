@@ -20,16 +20,19 @@
     <result column="lastest_assign_time" jdbcType="TIMESTAMP" property="lastestAssignTime" />
     <result column="status" jdbcType="INTEGER" property="status" />
     <result column="phone_enable" jdbcType="INTEGER" property="phoneEnable" />
+    <result column="status_report_enable" jdbcType="INTEGER" property="statusReportEnable" />
     <result column="remarks" jdbcType="VARCHAR" property="remarks" />
     <result column="location" jdbcType="INTEGER" property="location" />
+    <result column="push_addr" jdbcType="VARCHAR" property="pushAddr" />
   </resultMap>
 
 
   <sql id="Base_Column_List">
     id, device_code, imei, ip, port, device_key, product_key, create_time, lastest_assign_time, 
     status, leave_ground_duration, on_ground_duration, confidence_threshold, sensor_fix_height,
-    cloud_upload_enable, phone_enable, phone, device_name, remarks, location
+    cloud_upload_enable, phone_enable, phone, device_name, remarks, location, push_addr, status_report_enable
   </sql>
+
   <select id="getById" parameterType="java.lang.Long" resultMap="BaseResultMap">
     select 
     <include refid="Base_Column_List" />
@@ -63,7 +66,7 @@
 
   <select id="getConfigInfoByDeviceCode" resultMap="BaseResultMap">
     select id, device_code, leave_ground_duration, on_ground_duration,
-    confidence_threshold, sensor_fix_height, cloud_upload_enable
+    confidence_threshold, sensor_fix_height, cloud_upload_enable, status_report_enable
     from xt_terminal_imei_assign
     where device_code = #{deviceCode}
     limit 1
@@ -71,7 +74,7 @@
 
 
   <select id="getAllDeviceCodeImei" resultMap="BaseResultMap">
-    select id, device_code, imei
+    select id, device_code, imei, push_addr, vendor_id
     from xt_terminal_imei_assign
     where df = 0
   </select>
@@ -182,6 +185,17 @@
   </update>
 
 
+
+  <update id="updateUploadPointCloud" >
+    update xt_terminal_imei_assign
+    <set>
+      <if test="cloudUploadEnable != null">
+      cloud_upload_enable = #{cloudUploadEnable},
+    </if>
+    </set>
+    where device_code = #{deviceCode}
+  </update>
+
   <update id="updateConfig"  >
     update xt_terminal_imei_assign
     <set>
@@ -208,6 +222,9 @@
   <select id="getListCountByCondition" parameterType="java.util.Map" resultType="java.lang.Integer">
     select count(*) from xt_terminal_imei_assign
     where df = 0
+    <if test="vendorId!=null">
+      and vendor_id = #{vendorId}
+    </if>
     <if test="deviceCode!=null and deviceCode != ''">
       and device_code = #{deviceCode}
     </if>
@@ -227,6 +244,9 @@
     <if test="status!=null">
       and status = #{status}
     </if>
+    <if test="vendorId!=null">
+      and vendor_id = #{vendorId}
+    </if>
 
   </select>
 
@@ -236,6 +256,9 @@
     select <include refid="Base_Column_List"/>
     from xt_terminal_imei_assign
     where df = 0
+    <if test="vendorId!=null">
+      and vendor_id = #{vendorId}
+    </if>
     <if test="deviceCode!=null and deviceCode != ''">
       and device_code = #{deviceCode}
     </if>

@@ -31,6 +31,8 @@ public interface TerminalAssignMapper {
 
     public Integer updateConfig(Map map);
 
+    public Integer updateUploadPointCloud(@Param("deviceCode") String deviceCode, @Param("cloudUploadEnable") Integer cloudUploadEnable);
+
     public Integer updatePhoneEnable(@Param("deviceCode") String deviceCode, @Param("phoneEnable") Integer phoneEnable);
 
     public Integer updatePhone(@Param("deviceCode") String deviceCode, @Param("phone") String phone);
@@ -60,7 +62,7 @@ public interface TerminalAssignMapper {
      * 获取设备总数 union 在线设备数
      * @return
      */
-    public Integer getDeviceCount(@Param("status") Integer status);
+    public Integer getDeviceCount(@Param("status") Integer status, @Param("vendorId") Long vendorId);
 
 
 }

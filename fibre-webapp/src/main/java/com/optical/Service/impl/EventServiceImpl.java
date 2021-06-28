@@ -20,6 +20,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.optical.component.StaticMapRunner.vendorDeviceMap;
+
 /**
  * Created by mary on 2021/2/25.
  */
@@ -37,17 +39,16 @@ public class EventServiceImpl implements EventService {
 
 
 
-
     @Override
     public String fallEventDetected(RadarEventBean reb) {
         OpResult op = new OpResult(OpResult.OP_SUCCESS, OpResult.OpMsg.OP_SUCCESS);
         String rtnStr = "";
 
-
         try{
             DeviceAlarm alarm = new DeviceAlarm();
             String deviceName = terminalAssignMapper.getDeviceName(reb.getDevice_code());
-
+            Long vendorId = vendorDeviceMap.get(reb.getDevice_code());
+            alarm.setVendorId(vendorId);
             alarm.setDeviceCode(reb.getDevice_code());
             alarm.setDeviceName(deviceName);
             //status : 0未处理 1已处理 2误报
@@ -70,7 +71,6 @@ public class EventServiceImpl implements EventService {
             //更新住户状态    0不在 1卫生间 2卧室 3起居室 4厨房 6未知',
             //TODO: 常量
             residentInfoMapper.updateLocation(reb.getDevice_code(), 5);
-
             rtnStr = JSON.toJSONString(op);
 
         }catch (Exception e){
@@ -89,6 +89,7 @@ public class EventServiceImpl implements EventService {
         OpResult op = new OpResult(OpResult.OP_SUCCESS, OpResult.OpMsg.OP_SUCCESS);
         String rtnStr = "";
         try{
+            //TODO: 根据deviceCode 获取设备的vendorId
             //将本deviceCode下status = 0(待处理)的记录，用消警信息补全
             Integer unhandledAlarmCount = deviceAlarmMapper.getUnhandledAlarmCountByDeviceCode(reb.getDevice_code());
             if(unhandledAlarmCount > 0) {

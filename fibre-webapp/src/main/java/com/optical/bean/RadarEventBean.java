@@ -8,7 +8,7 @@ public class RadarEventBean {
 
     private Long vendor_id;
 
-    private String unique_id;
+    private Object unique_id;
 
     private String imei;
 
@@ -49,6 +49,12 @@ public class RadarEventBean {
 
     private String cur_frame_num;
 
+    //最高温度
+    private Integer ti_max_temprate;
+    //最高温度区域
+    private Integer ti_tmpmax_region;
+
+
 
     public String getCur_frame_num() {
         return cur_frame_num;
@@ -58,11 +64,11 @@ public class RadarEventBean {
         this.cur_frame_num = cur_frame_num;
     }
 
-    public String getUnique_id() {
+    public Object getUnique_id() {
         return unique_id;
     }
 
-    public void setUnique_id(String unique_id) {
+    public void setUnique_id(Object unique_id) {
         this.unique_id = unique_id;
     }
 
@@ -194,5 +200,29 @@ public class RadarEventBean {
 
     public void setSensor_fix_height(Double sensor_fix_height) {
         this.sensor_fix_height = sensor_fix_height;
+    }
+
+    public Long getVendor_id() {
+        return vendor_id;
+    }
+
+    public void setVendor_id(Long vendor_id) {
+        this.vendor_id = vendor_id;
+    }
+
+    public Integer getTi_max_temprate() {
+        return ti_max_temprate;
+    }
+
+    public void setTi_max_temprate(Integer ti_max_temprate) {
+        this.ti_max_temprate = ti_max_temprate;
+    }
+
+    public Integer getTi_tmpmax_region() {
+        return ti_tmpmax_region;
+    }
+
+    public void setTi_tmpmax_region(Integer ti_tmpmax_region) {
+        this.ti_tmpmax_region = ti_tmpmax_region;
     }
 }

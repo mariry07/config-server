@@ -7,7 +7,7 @@ import com.optical.bean.OpWebResult;
  */
 public interface FallDeviceService {
 
-    public OpWebResult getFallEventDeviceList(String deviceCode, String imei, Integer status,
+    public OpWebResult getFallEventDeviceList(Long vendorId, String deviceCode, String imei, Integer status,
                                               Integer page, Integer limit);
 
     public OpWebResult updatePhoneEnable(String deviceCode, Integer enable);
@@ -22,6 +22,10 @@ public interface FallDeviceService {
                         Double leaveGroundDuration, Double confidenceThreshold);
 
     public OpWebResult getStatistic(Long vendorId);
+
+    public OpWebResult otaTriger(String deviceCode);
+
+    public OpWebResult pointCloudConfig(String deviceCode);
 
 
 }

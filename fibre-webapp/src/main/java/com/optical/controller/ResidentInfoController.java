@@ -25,6 +25,13 @@ public class ResidentInfoController {
         return residentService.getResidentList(floor, roomName, page, limit);
     }
 
+    @RequestMapping(value = "/tabs", method = {RequestMethod.POST, RequestMethod.GET})
+    @ResponseBody
+    public OpWebResult getTabs(Long vendorId) {
+
+        return residentService.getTabs(vendorId);
+    }
+
     @RequestMapping(value = "/newResident", method = {RequestMethod.POST, RequestMethod.GET})
     @ResponseBody
     public OpWebResult newResident(ResidentInfo residentInfo) {

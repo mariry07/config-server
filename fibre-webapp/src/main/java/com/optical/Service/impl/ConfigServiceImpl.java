@@ -51,7 +51,6 @@ public class ConfigServiceImpl implements ConfigService {
             ci.setMessage(ConfigInfo.OpMsg.ILLEGAL);
             return ci;
         }
-
     }
 
     @Override

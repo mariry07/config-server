@@ -26,19 +26,15 @@ public class AliCallUtil {
         return new com.aliyun.dyvmsapi20170525.Client(config);
     }
 
-    public static SingleCallByTtsResponse singleCallByTts() throws Exception {
-        com.aliyun.dyvmsapi20170525.Client client = AliCallUtil.createClient(getAccessKeyId(), getAccessKeySecret());
-        SingleCallByTtsRequest singleCallByTtsRequest = new SingleCallByTtsRequest()
-                .setCalledNumber("18661712617")
-                .setTtsCode("TTS_212482029")
-                .setPlayTimes(2);
-        SingleCallByTtsResponse response = client.singleCallByTts(singleCallByTtsRequest);
-        return response;
 
-    }
-
+    //accessKeyId 前半截 LTAI4G4x6y9
+    //acdessKeyId 后半截 GX3daHo6EgZV
+    //accessKeySecret 前半截 DE5cDCqpnBIsaCY
+    // accessKeySecret 后半截 HDXTWtn6fL8vutV
     public static SingleCallByTtsResponse singleCallByTts2Phone(String tgtPhone) throws Exception {
         com.aliyun.dyvmsapi20170525.Client client = AliCallUtil.createClient(getAccessKeyId(), getAccessKeySecret());
+
+
         SingleCallByTtsRequest singleCallByTtsRequest = new SingleCallByTtsRequest()
                 .setCalledNumber(tgtPhone)
                 .setTtsCode("TTS_212482029")
@@ -48,11 +44,4 @@ public class AliCallUtil {
     }
 
 
-    private static String getAccessKeyId(){
-        return "";
-    }
-
-    private static String getAccessKeySecret() {
-        return "";
-    }
 }

@@ -13,7 +13,7 @@ public class OpResult implements Serializable {
 
     private int result;//1 成功  0失败
     private String msg;//提示信息
-    private String unique_id;
+    private Object unique_id;
     private Object dataValue;//数据值
     private Integer type;
 
@@ -47,11 +47,11 @@ public class OpResult implements Serializable {
         return dataValue;
     }
 
-    public String getUnique_id() {
+    public Object getUnique_id() {
         return unique_id;
     }
 
-    public void setUnique_id(String unique_id) {
+    public void setUnique_id(Object unique_id) {
         this.unique_id = unique_id;
     }
 

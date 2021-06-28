@@ -19,8 +19,8 @@ import static com.optical.component.StaticMapRunner.staticMap;
 /**
  * Created by mary on 2021/5/20.
  */
-//@Component
-//@EnableScheduling
+@Component
+@EnableScheduling
 public class DeviceOnLineTask {
     private static Logger log = LoggerFactory.getLogger(DeviceOnLineTask.class);
 
@@ -28,7 +28,7 @@ public class DeviceOnLineTask {
     private TerminalAssignMapper terminalAssignMapper;
 
 
-    @Scheduled(cron = "0/20 * * * * ?")
+    @Scheduled(cron = "0/30 * * * * ?")
     public void OnLineCheckJob() {
         log.info("entered OnLineCheckJob......");
         // 检查线：最近一次信息上传发生在一分钟以内
@@ -56,7 +56,5 @@ public class DeviceOnLineTask {
         }
 
     }
-
-
 
 }

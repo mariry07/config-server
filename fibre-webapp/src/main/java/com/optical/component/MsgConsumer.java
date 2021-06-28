@@ -7,10 +7,12 @@ import com.optical.bean.WebSocketMsg;
 import com.optical.bean.WsAlarmPush;
 import com.optical.common.ByteUtil;
 import com.optical.common.EncodeUtil;
+import com.optical.common.XTConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.StringUtils;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -37,16 +39,32 @@ public class MsgConsumer implements Runnable{
 
     @Override
     public void run() {
+        String atCmd = "";
+        boolean ret = false;
+
+
         try{
-            int count = 0;
-            while (true) {
-                try{
-                    log.debug("queue length: " + queue.size());
-                    consume(queue.take(), count);
-                }catch (InterruptedException e){
-                    log.error("consume Exception! e = {}", e);
-                }
-            }
+            //1. 下发 AT_TEST, AT_OP_TEST 信息,   b'AT+OTATEST=?\r'
+            atCmd = formatCmd(XTConstants.WQ_CMD.AT_TEST,
+                    XTConstants.WQ_CMD.AT_OP_TEST,
+                    null,null,null);
+
+            //2. 下发 AT_TEST, AT_OP_SET
+
+
+
+
+
+//            int count = 0;
+//            while (true) {
+//                try{
+//                    log.debug("queue length: " + queue.size());
+//                    consume(queue.take(), count);
+//                }catch (InterruptedException e){
+//                    log.error("consume Exception! e = {}", e);
+//                }
+//            }
+
         }catch (Exception e) {
             log.error("Exception! e={}", e);
             return;
@@ -59,6 +77,37 @@ public class MsgConsumer implements Runnable{
         decodeMsg(msg);
         return "success";
     }
+
+    private boolean otaCmdSend() {
+        boolean ret = false;
+
+
+
+
+
+
+
+        return ret;
+    }
+
+    private String formatCmd(String cmd, String op, String query1, String query2, String query3) {
+        String at_cmd = "";
+
+        StringBuffer sb = new StringBuffer();
+        sb.append(cmd).append(op);
+        if(!StringUtils.isEmpty(query1)) {
+            sb.append(query1);
+        }
+        if(!StringUtils.isEmpty(query2)) {
+            sb.append(",").append(query2);
+        }
+        if(!StringUtils.isEmpty(query3)) {
+            sb.append(",").append(query3);
+        }
+        sb.append(XTConstants.WQ_CMD.AT_END);
+        return at_cmd;
+    }
+
 
     private boolean decodeMsg(String msg) {
         boolean b = true;

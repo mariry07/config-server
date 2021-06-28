@@ -25,6 +25,12 @@ public class StaticMapRunner implements ApplicationRunner {
 
     public static final Map<String, Object> staticMap = new ConcurrentHashMap<>();
 
+    public static final Map<String, Long> vendorDeviceMap = new ConcurrentHashMap<>();
+
+    public static final Map<String, String> vendorPushMap = new ConcurrentHashMap<>();
+
+    public static final Map<String, String> otaProcessMap = new ConcurrentHashMap<>();
+
     @Autowired
     private TerminalAssignMapper terminalAssignMapper;
 
@@ -40,9 +46,13 @@ public class StaticMapRunner implements ApplicationRunner {
 
         for(TerminalAssign ta : deviceInfo) {
             staticMap.put(ta.getDeviceCode(), currentSecond);
+            vendorDeviceMap.put(ta.getDeviceCode(), ta.getVendorId());
+            vendorPushMap.put(ta.getDeviceCode(), ta.getPushAddr());
         }
-
-        log.info("init success, staticMap: " + JSON.toJSONString(staticMap));
+        log.info("init success, staticMap and vendorDeviceMap ");
+        log.info("staticMap: " + JSON.toJSONString(staticMap));
+        log.info("vendorDeviceMap: " + JSON.toJSONString(vendorDeviceMap));
+        log.info("vendorPushMap: " + JSON.toJSONString(vendorPushMap));
 
     }
 

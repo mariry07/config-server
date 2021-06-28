@@ -26,10 +26,10 @@ public class DeviceController {
 
     @RequestMapping(value = "/deviceList", method = {RequestMethod.POST, RequestMethod.GET})
     @ResponseBody
-    public OpWebResult getDeviceList(String deviceCode, String imei, Integer status,
+    public OpWebResult getDeviceList(Long vendorId, String deviceCode, String imei, Integer status,
                                      Integer page, Integer limit){
         OpWebResult op = new OpWebResult(OpResult.OP_SUCCESS, OpResult.OpMsg.OP_SUCCESS);
-        return fallDeviceService.getFallEventDeviceList(deviceCode, imei, status, page, limit);
+        return fallDeviceService.getFallEventDeviceList(vendorId, deviceCode, imei, status, page, limit);
     }
 
 
@@ -48,6 +48,22 @@ public class DeviceController {
         OpWebResult op = new OpWebResult(OpResult.OP_SUCCESS, OpResult.OpMsg.OP_SUCCESS);
         log.info("deviceCode: " + deviceCode + ", enable: " + phoneEnable);
         return fallDeviceService.updatePhoneEnable(deviceCode, phoneEnable);
+    }
+
+    @RequestMapping(value = "/otaTriger", method = {RequestMethod.POST, RequestMethod.GET})
+    @ResponseBody
+    public OpWebResult otaTriger(String deviceCode){
+        OpWebResult op = new OpWebResult(OpResult.OP_SUCCESS, OpResult.OpMsg.OP_SUCCESS);
+        log.info("otaTriger deviceCode: " + deviceCode);
+        return fallDeviceService.otaTriger(deviceCode);
+    }
+
+    @RequestMapping(value = "/pointCloudConfig", method = {RequestMethod.POST, RequestMethod.GET})
+    @ResponseBody
+    public OpWebResult pointCloudConfig(String deviceCode){
+        OpWebResult op = new OpWebResult(OpResult.OP_SUCCESS, OpResult.OpMsg.OP_SUCCESS);
+        log.info("pointCloudConfig deviceCode: " + deviceCode);
+        return fallDeviceService.pointCloudConfig(deviceCode);
     }
 
 

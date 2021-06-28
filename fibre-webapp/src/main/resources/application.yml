@@ -14,6 +14,9 @@ spring:
     url: jdbc:mysql://47.105.53.60:3306/xt_config_server?characterEncoding=UTF-8
     username: xt
     password: Ss!@#123
+#    url: jdbc:mysql://rm-bp1lyq525r23mq5bu3o.mysql.rds.aliyuncs.com/xt_config_server?characterEncoding=UTF-8
+#    username: xt
+#    password: Ss!@#123
 
 mybatis:
   #mapper-locations: classpath*:sql/*Mapper.xml
@@ -49,5 +52,10 @@ socket:
  pool-core: 10
  pool-max: 30
  pool-queue-init: 10
+
+#通用终端配置文件
+otafile:
+#  path: /ota/SG-KL2AIO01-11.0.0.0-20210607.bin
+  path: D:\\SG-KL2AIO01-11.0.0.0-20210607.bin
 
 

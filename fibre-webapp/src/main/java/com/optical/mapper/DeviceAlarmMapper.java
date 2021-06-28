@@ -22,17 +22,17 @@ public interface DeviceAlarmMapper {
 
     int updateAlarmStatus(@Param("deviceCode") String deviceCode, @Param("status") Integer reason);
 
-    List<DeviceAlarm> getAll();
+    List<DeviceAlarm> getAll(@Param("vendorId") Long vendorId);
 
-    Integer getDataCountByCondition(@Param("deviceCode") String deviceCode, @Param("status") Integer status);
+    Integer getDataCountByCondition(@Param("vendorId") Long vendorId, @Param("deviceCode") String deviceCode, @Param("status") Integer status);
 
-    List<DeviceAlarm> getDataByCondition(@Param("deviceCode") String deviceCode, @Param("status") Integer status,
+    List<DeviceAlarm> getDataByCondition(@Param("vendorId") Long vendorId, @Param("deviceCode") String deviceCode, @Param("status") Integer status,
                                          @Param("start") Integer start, @Param("end") Integer end);
 
     Integer updateDescription(@Param("id") Integer id, @Param("description") String description);
 
-    Integer getUnhandledAlarmCount();
+    Integer getUnhandledAlarmCount(@Param("vendorId")Long vendorId);
 
-    Integer getAlarmCountSinceToday(@Param("startTime") Date today);
+    Integer getAlarmCountSinceToday(@Param("startTime") Date today, @Param("vendorId") Long vendorId);
 
 }
