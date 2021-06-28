@@ -218,8 +218,8 @@ public class FallDeviceServiceImpl implements FallDeviceService {
 
         try{
             //设备数 离线设备数
-            Integer total = terminalAssignMapper.getDeviceCount(null);
-            Integer onLine = terminalAssignMapper.getDeviceCount(0);
+            Integer total = terminalAssignMapper.getDeviceCount(null, vendorId);
+            Integer onLine = terminalAssignMapper.getDeviceCount(0, vendorId);
 
             //今日报警数
             Calendar calendar = Calendar.getInstance();
@@ -230,10 +230,10 @@ public class FallDeviceServiceImpl implements FallDeviceService {
             calendar.set(Calendar.SECOND, 0);
             Date zero = calendar.getTime();
 
-            Integer todayAlarm = deviceAlarmMapper.getAlarmCountSinceToday(zero);
+            Integer todayAlarm = deviceAlarmMapper.getAlarmCountSinceToday(zero, vendorId);
 
             //未处理报警数
-            Integer unhandleAlarm = deviceAlarmMapper.getUnhandledAlarmCount();
+            Integer unhandleAlarm = deviceAlarmMapper.getUnhandledAlarmCount(vendorId);
             rtnMap.put("total", total);
             rtnMap.put("online", onLine);
             rtnMap.put("todayAlarm", todayAlarm);

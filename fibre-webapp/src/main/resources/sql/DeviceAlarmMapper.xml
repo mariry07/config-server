@@ -67,6 +67,9 @@
     select count(*)
     from xt_device_alarm
     where `status` = 0
+    <if test="vendorId!=null">
+      and vendor_id = #{vendorId}
+    </if>
     and `df` = 0
   </select>
 
@@ -75,6 +78,9 @@
     select count(*)
     from xt_device_alarm
     where `df` = 0
+    <if test="vendorId!=null">
+      and vendor_id = #{vendorId}
+    </if>
     and   <![CDATA[ create_time > #{startTime} ]]>
   </select>
 

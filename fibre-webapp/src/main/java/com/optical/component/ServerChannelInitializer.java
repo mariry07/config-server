@@ -35,7 +35,7 @@ public class ServerChannelInitializer extends ChannelInitializer<SocketChannel> 
 
         ByteBuf[] delimiter = new ByteBuf[] {
                 Unpooled.copiedBuffer("}".getBytes()),
-                Unpooled.wrappedBuffer("ok".getBytes()),
+                Unpooled.copiedBuffer("OK\r".getBytes()),
 //                Unpooled.wrappedBuffer(new byte[] { '\n' }),
         };
 

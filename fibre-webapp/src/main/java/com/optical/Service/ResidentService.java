@@ -23,4 +23,6 @@ public interface ResidentService {
 
     public OpWebResult removeResident(Long id);
 
+    public OpWebResult getTabs(Long vendorId);
+
 }

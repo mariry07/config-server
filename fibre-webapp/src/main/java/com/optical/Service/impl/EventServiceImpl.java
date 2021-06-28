@@ -39,7 +39,6 @@ public class EventServiceImpl implements EventService {
 
 
 
-
     @Override
     public String fallEventDetected(RadarEventBean reb) {
         OpResult op = new OpResult(OpResult.OP_SUCCESS, OpResult.OpMsg.OP_SUCCESS);
@@ -72,7 +71,6 @@ public class EventServiceImpl implements EventService {
             //更新住户状态    0不在 1卫生间 2卧室 3起居室 4厨房 6未知',
             //TODO: 常量
             residentInfoMapper.updateLocation(reb.getDevice_code(), 5);
-
             rtnStr = JSON.toJSONString(op);
 
         }catch (Exception e){

@@ -9,6 +9,7 @@ import com.optical.bean.*;
 import com.optical.common.*;
 import com.optical.mapper.TerminalAssignMapper;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.timeout.IdleState;
@@ -48,7 +49,11 @@ public class NettyServerHandler extends ChannelInboundHandlerAdapter {
 
 
     private String OTA_FILE_PATH = "/ota/SG-KL2AIO01-11.0.0.0-20210610V1.01.bin";
-//    private String OTA_FILE_PATH = "D:\\SG-KL2AIO01-11.0.0.0-20210607.bin";
+//    private String OTA_FILE_PATH = "D:\\SG-KL2AIO01-11.0.0.0-20210610V1.01.bin";
+    private String sperateStr = "\n}";
+
+    //ota下发每次下发大小
+    private Integer PACK_SIZE = 1000;
 
 
     private final BlockingQueue<String> list;
@@ -80,7 +85,6 @@ public class NettyServerHandler extends ChannelInboundHandlerAdapter {
         NettyServer.getMessageMap().put(getIPString(ctx), "");
 
 
-
 //        TODO: 初始化一个针对当前channel的consumer，只消费当前channel数据；初始化时带入当前map的key值
 //        启动消费者线程
 //        MsgConsumer c = new MsgConsumer(list);
@@ -108,23 +112,24 @@ public class NettyServerHandler extends ChannelInboundHandlerAdapter {
         String hexStr = EncodeUtil.binary2Hex(receiveMsgBytes);
         String jsonStr = ByteUtil.getString(receiveMsgBytes, "utf-8") + "}";
 
-        log.info("服务器收到消息: " + hexStr);
-        log.info("jsonStr: " + jsonStr);
+//        log.info("服务器收到消息: " + hexStr);
+//        log.info("jsonStr: " + jsonStr);
 
-        String logInfo = formatCurrentTimeStr() + "服务器收到消息: " + jsonStr;
-        WebSocketMsg push = new WebSocketMsg(2, 0, logInfo);
-        websocketServer.sendInfo(JSON.toJSONString(push), null);
+//        String logInfo = formatCurrentTimeStr() + "服务器收到消息: " + jsonStr;
+        WebSocketMsg push = new WebSocketMsg(2, 0, "");
+//        websocketServer.sendInfo(JSON.toJSONString(push), null);
 
-        if(jsonStr.contains("AT*")){
-            ctx.write("wrong json with AT command, drop!");
-            ctx.flush();
-            return;
-        }
+//        if(jsonStr.contains("AT*")){
+//            ctx.write("wrong json with AT command, drop!");
+//            ctx.flush();
+//            return;
+//        }
+//        String sperateStr = "\r\n}";
 
-        if(jsonStr.equals("}")) {
+        if(jsonStr.equals("}") || jsonStr.equals(sperateStr)) {
 //            if(jsonStr.contains("ok")) {
-            //根据otaProcessStage 判断下一步操作
-            log.info("here in jsonStr = nothing");
+                //根据otaProcessStage 判断下一步操作
+                log.info("here in jsonStr = nothing");
 
             //根据otaProcessMap 的stage 判断下一步操作
             //ota stage ：test  -  test op - file info - transfer  -  transfer end  -  end ota
@@ -138,16 +143,22 @@ public class NettyServerHandler extends ChannelInboundHandlerAdapter {
                 //测试时的临时解决方案：
                 ChannelHandlerContext tmpCtx = NettyServer.getCtxMap().get(otaProcessMap.get("deviceCode"));
                 if(tmpCtx != null) {
-                    tmpCtx.write(formatCmd(XTConstants.WQ_CMD.AT_TEST, XTConstants.WQ_CMD.AT_OP_SET, null, null, null));
+                    log.info("stage 0->1, use tmpCtx");
+                    String t1 = formatCmd(XTConstants.WQ_CMD.AT_TEST, XTConstants.WQ_CMD.AT_OP_SET, null, null, null);
+                    tmpCtx.write(t1);
+                    //string 转byte
+//                    byte[] llll = ByteUtil.getBytes(t1, "utf-8");
+//                    tmpCtx.write(Unpooled.copiedBuffer(llll));
                     tmpCtx.flush();
                 }else{
-                    ctx.write(formatCmd(XTConstants.WQ_CMD.AT_TEST, XTConstants.WQ_CMD.AT_OP_SET, null, null, null));
+                    log.info("stage 0->1, tmpCtx is null, use ctx instead");
+                    String t1 = formatCmd(XTConstants.WQ_CMD.AT_TEST, XTConstants.WQ_CMD.AT_OP_SET, null, null, null);
+                    ctx.write(t1);
                     ctx.flush();
                 }
 
 //                ctx.write(formatCmd(XTConstants.WQ_CMD.AT_TEST, XTConstants.WQ_CMD.AT_OP_SET, null, null, null));
 //                ctx.flush();
-
                 return;
 
             }else if(curStage == 1) {
@@ -156,24 +167,28 @@ public class NettyServerHandler extends ChannelInboundHandlerAdapter {
                 curStage = 2;
                 otaProcessMap.put("stage", curStage.toString());
 
-//                File file = new File("D:\\SG-KL2AIO01-11.0.0.0-20210607.bin");
                 File file = new File(OTA_FILE_PATH);
 
                 Long fileSize = file.length();
                 String crc32 = getCRC32Str(file);
-                String packSize = "1000";
+                String packSize = PACK_SIZE.toString();
 
                 //测试时的临时解决方案：
                 ChannelHandlerContext tmpCtx = NettyServer.getCtxMap().get(otaProcessMap.get("deviceCode"));
                 if(tmpCtx != null) {
-                    tmpCtx.write(formatCmd(XTConstants.WQ_CMD.AT_FWINFO, XTConstants.WQ_CMD.AT_OP_SET, null, null, null));
-                    tmpCtx.flush();
-                }else {
-                    ctx.write(formatCmd(XTConstants.WQ_CMD.AT_FWINFO, XTConstants.WQ_CMD.AT_OP_SET, Long.toString(fileSize), crc32, packSize));
-                    ctx.flush();
+                        log.info("stage 1->2, use tmpCtx");
+                        String t = formatCmd(XTConstants.WQ_CMD.AT_FWINFO, XTConstants.WQ_CMD.AT_OP_SET, Long.toString(fileSize), crc32, packSize);
+                        log.info(t);
+                        tmpCtx.write(t);
+                        tmpCtx.flush();
+                    }else {
+                        log.info("stage 1->2, use tmpCtx");
+                        log.info("### ota 下发：");
+                        String t = formatCmd(XTConstants.WQ_CMD.AT_FWINFO, XTConstants.WQ_CMD.AT_OP_SET, Long.toString(fileSize), crc32, packSize);
+                        log.info(t);
+                        ctx.write(t);
+                        ctx.flush();
                 }
-
-
 
 //                ctx.write(formatCmd(XTConstants.WQ_CMD.AT_FWINFO, XTConstants.WQ_CMD.AT_OP_SET, Long.toString(fileSize), crc32, packSize));
 //                ctx.flush();
@@ -187,36 +202,41 @@ public class NettyServerHandler extends ChannelInboundHandlerAdapter {
                 FileInputStream fis = new FileInputStream(OTA_FILE_PATH);
 
                 //指定位置
-                fis.skip(i * 1000);
+                fis.skip(i * PACK_SIZE);
                 //指定长度
-                byte[] filebuf = new byte[1000];
+                byte[] filebuf = new byte[PACK_SIZE];
                 byte[] infoBuf;
                 int len = fis.read(filebuf);
                 infoBuf = new byte[len];
                 System.arraycopy(filebuf, 0, infoBuf, 0, len);
                 String hexString = EncodeUtil.binary2Hex(infoBuf);
-                String thisCrc = getByteCRC32Str(infoBuf);
+//                String thisCrc = getByteCRC32Str(infoBuf, len);
+                String thisCrc = getByteCRC32Str(hexString);
                 i ++;
                 otaProcessMap.put("count", i.toString());
 
                 //若是最后一个数据包，则下一次将需要跳转stage，则将stage置为4
-                if(len < 1000) {
+                if(len < PACK_SIZE) {
                     otaProcessMap.put("stage", "4");
                     //计数器复位
                     otaProcessMap.put("count", "0");
                 }
 
-
                 //测试时的临时解决方案：
                 ChannelHandlerContext tmpCtx = NettyServer.getCtxMap().get(otaProcessMap.get("deviceCode"));
                 if(tmpCtx != null) {
-                    tmpCtx.write(formatCmd(XTConstants.WQ_CMD.AT_FWTR, XTConstants.WQ_CMD.AT_OP_SET, Long.toString(i), thisCrc, hexString));
+                    log.info("2->3 4, use tmpCtx");
+                    String t2 = formatCmd(XTConstants.WQ_CMD.AT_FWTR, XTConstants.WQ_CMD.AT_OP_SET, Long.toString(i - 1), thisCrc, hexString);
+//                    log.info(t2);
+                    tmpCtx.write(t2);
                     tmpCtx.flush();
                 }else{
-                    ctx.write(formatCmd(XTConstants.WQ_CMD.AT_FWTR, XTConstants.WQ_CMD.AT_OP_SET, Long.toString(i), thisCrc, hexString));
+                    log.info("2->3 4, use Ctx instead");
+                    String t2 = formatCmd(XTConstants.WQ_CMD.AT_FWTR, XTConstants.WQ_CMD.AT_OP_SET, Long.toString(i), thisCrc, hexString);
+//                    log.info(t2);
+                    ctx.write(t2);
                     ctx.flush();
                 }
-
 
 //                ctx.write(formatCmd(XTConstants.WQ_CMD.AT_FWTR, XTConstants.WQ_CMD.AT_OP_SET, Long.toString(i), thisCrc, hexString));
 //                ctx.flush();
@@ -226,10 +246,14 @@ public class NettyServerHandler extends ChannelInboundHandlerAdapter {
                 //测试时的临时解决方案：
                 ChannelHandlerContext tmpCtx = NettyServer.getCtxMap().get(otaProcessMap.get("deviceCode"));
                 if(tmpCtx != null) {
-                    tmpCtx.write(formatCmd(XTConstants.WQ_CMD.AT_FWFNS, XTConstants.WQ_CMD.AT_OP_EXE, null, null, null));
+                    log.info("4->5, use tmpCtx");
+                    String t4 = formatCmd(XTConstants.WQ_CMD.AT_FWFNS, XTConstants.WQ_CMD.AT_OP_EXE, null, null, null);
+                    tmpCtx.write(t4);
                     tmpCtx.flush();
                 }else {
-                    ctx.write(formatCmd(XTConstants.WQ_CMD.AT_FWFNS, XTConstants.WQ_CMD.AT_OP_EXE, null, null, null));
+                    log.info("4->5, use Ctx instead");
+                    String t4 = formatCmd(XTConstants.WQ_CMD.AT_FWFNS, XTConstants.WQ_CMD.AT_OP_EXE, null, null, null);
+                    ctx.write(t4);
                     ctx.flush();
                 }
 
@@ -253,15 +277,20 @@ public class NettyServerHandler extends ChannelInboundHandlerAdapter {
             if(jsonStr.contains("868922053128126")) {
                 //正泰临时补丁
                 staticMap.put("xtd20211700015", System.currentTimeMillis());
+            }else if(jsonStr.contains("868922052985955")) {
+                staticMap.put("xtd20211700009", System.currentTimeMillis());
             }
             log.info("服务器收到消息: " + hexStr);
             log.info("jsonStr: " + jsonStr);
+            push.setShowWindow(0);
+            push.setData(jsonStr);
+            websocketServer.sendInfo(JSON.toJSONString(push), null);
             rtnStr = "server-" + jsonStr;
 
         }else{
             //处理业务时间数据包逻辑
             try{
-                //判断最后一位是 花括号} 0x7d.若不是,则说明是问题字符串，做折中处理
+                //判断最后一位是 花括号} 0x7d.若不是,则说明是问题字符做折中处理串，
                 if(jsonStr.charAt(jsonStr.length() - 1) != 0x7d) {
                     //找到最后一个逗号，将它替换成"}",并且只保留之前的数据
                     jsonStr = jsonStr.substring(0, jsonStr.lastIndexOf(",") - 1);
@@ -272,6 +301,9 @@ public class NettyServerHandler extends ChannelInboundHandlerAdapter {
                 if(reb.getType() == 0) {
                     log.info("服务器收到消息: " + hexStr);
                     log.info("jsonStr: " + jsonStr);
+                    push.setShowWindow(0);
+                    push.setData(jsonStr);
+                    websocketServer.sendInfo(JSON.toJSONString(push), null);
 
                     //注册事件
                     ConfigInfo ci = handleRegisterEvent(reb);
@@ -291,6 +323,9 @@ public class NettyServerHandler extends ChannelInboundHandlerAdapter {
                     Map rtnMap = new HashMap();
                     rtnMap.put("type", 7);
                     rtnMap.put("msg", "got your heart beat msg");
+//                    push.setShowWindow(0);
+//                    push.setData(jsonStr);
+//                    websocketServer.sendInfo(JSON.toJSONString(push), null);
 
                     rtnStr = JSON.toJSONString(rtnMap);
                     //刷新staticMap 中的设备最近一次信息上报事件
@@ -335,12 +370,18 @@ public class NettyServerHandler extends ChannelInboundHandlerAdapter {
                     ChannelHandlerContext tmpCtx = NettyServer.getCtxMap().get(reb.getDevice_code());
                     if(tmpCtx != null) {
                         log.info("use tmpCtx");
-                        tmpCtx.write(formatCmd(XTConstants.WQ_CMD.AT_TEST, XTConstants.WQ_CMD.AT_OP_TEST, null, null, null));
+                        //string 转byte
+//                    byte[] llll = ByteUtil.getBytes(t1, "utf-8");
+                        String t1 = formatCmd(XTConstants.WQ_CMD.AT_TEST, XTConstants.WQ_CMD.AT_OP_TEST, null, null, null);
+//                        tmpCtx.write(Unpooled.copiedBuffer(ByteUtil.getBytes(t1, "utf-8")));
+                        tmpCtx.write(t1);
                         tmpCtx.flush();
                     }else{
                         log.info("tmpCtx is null, use current ctx instead");
                         //要是没数据，还要用这个
-                        ctx.write(formatCmd(XTConstants.WQ_CMD.AT_TEST, XTConstants.WQ_CMD.AT_OP_TEST, null, null, null));
+                        String t1 = formatCmd(XTConstants.WQ_CMD.AT_TEST, XTConstants.WQ_CMD.AT_OP_TEST, null, null, null);
+                        ctx.write(t1);
+//                        ctx.write(formatCmd(XTConstants.WQ_CMD.AT_TEST, XTConstants.WQ_CMD.AT_OP_TEST, null, null, null));
                         ctx.flush();
                     }
 
@@ -348,7 +389,7 @@ public class NettyServerHandler extends ChannelInboundHandlerAdapter {
                     return;
 
                 }else if(reb.getType() == 1) {
-                    log.info("服务器收到消息: " + hexStr);
+                    log.info("服务器收到消息1: " + hexStr);
                     log.info("jsonStr: " + jsonStr);
                     // 报警事件
 
@@ -365,8 +406,10 @@ public class NettyServerHandler extends ChannelInboundHandlerAdapter {
 
                     //推送微信小程序
                     push.setShowWindow(1);
+                    push.setMsgType(1);
                     push.setData(reb.getDevice_code());
                     websocketServer.sendInfo(JSON.toJSONString(push), null);
+                    push.setMsgType(0);
 
                     //3. 检查是否需要推送第三方
                     if(!StringUtils.isEmpty(vendorPushMap.get(reb.getDevice_code()))) {
@@ -389,7 +432,7 @@ public class NettyServerHandler extends ChannelInboundHandlerAdapter {
                         log.info("here called tgtPhone from database " + phone + ", response: " + JSON.toJSONString(response));
                     }
                 }else if(reb.getType() == 2){
-                    log.info("服务器收到消息: " + hexStr);
+                    log.info("服务器收到消息2: " + hexStr);
                     log.info("jsonStr: " + jsonStr);
                     NettyServer.getMessageMap().put(getIPString(ctx), reb.getDevice_code());
                     NettyServer.getCtxMap().put(reb.getDevice_code(), ctx);
@@ -416,12 +459,19 @@ public class NettyServerHandler extends ChannelInboundHandlerAdapter {
                         }
                     }
                     push.setShowWindow(1);
+                    push.setMsgType(2);
                     push.setData(reb.getDevice_code());
                     websocketServer.sendInfo(JSON.toJSONString(push), null);
+                    push.setMsgType(0);
 
                 }else if(reb.getType() == 3) {
-                    log.info("服务器收到消息: " + hexStr);
+                    log.info("服务器收到消息3: " + hexStr);
                     log.info("jsonStr: " + jsonStr);
+
+//                    push.setShowWindow(0);
+//                    push.setData(jsonStr);
+//                    websocketServer.sendInfo(JSON.toJSONString(push), null);
+
                     NettyServer.getMessageMap().put(getIPString(ctx), reb.getDevice_code());
                     NettyServer.getCtxMap().put(reb.getDevice_code(), ctx);
                     log.info("3 NettyServer.getCtxMap().get(ci.getDevice_code(): " +
@@ -435,7 +485,7 @@ public class NettyServerHandler extends ChannelInboundHandlerAdapter {
 
                 }else if(reb.getType() == 4) {
                     //人员有无发现事件
-                    log.info("服务器收到消息: " + hexStr);
+                    log.info("服务器收到消息4: " + hexStr);
                     log.info("jsonStr: " + jsonStr);
                     NettyServer.getMessageMap().put(getIPString(ctx), reb.getDevice_code());
                     NettyServer.getCtxMap().put(reb.getDevice_code(), ctx);
@@ -460,8 +510,10 @@ public class NettyServerHandler extends ChannelInboundHandlerAdapter {
                         }
                     }
                     push.setShowWindow(1);
+                    push.setMsgType(4);
                     push.setData(reb.getDevice_code());
                     websocketServer.sendInfo(JSON.toJSONString(push), null);
+                    push.setMsgType(0);
 
                 }else if(reb.getType() == 5) {
                     Date date=new Date();
@@ -480,7 +532,7 @@ public class NettyServerHandler extends ChannelInboundHandlerAdapter {
                     toFile.close();
 
                 }else if(reb.getType() == 6) {
-                    log.info("服务器收到消息: " + hexStr);
+                    log.info("服务器收到消息6: " + hexStr);
                     log.info("jsonStr: " + jsonStr);
                     Date date=new Date();
                     DateFormat format=new SimpleDateFormat("yyyy-MM-dd");
@@ -500,6 +552,9 @@ public class NettyServerHandler extends ChannelInboundHandlerAdapter {
                     staticMap.put(reb.getDevice_code(), System.currentTimeMillis());
                 }else if(reb.getType() == 8) {
 
+//                    push.setShowWindow(0);
+//                    push.setData(jsonStr);
+//                    websocketServer.sendInfo(JSON.toJSONString(push), null);
 //                    log.info("服务器收到消息: " + hexStr);
                     log.info("###### temperature: " + reb.getDevice_code() + ", " + jsonStr);
                     deviceStatusLogService = SpringBeanUtil.getBean(DeviceStatusLogService.class);
@@ -832,14 +887,23 @@ public class NettyServerHandler extends ChannelInboundHandlerAdapter {
         while (checkedinputstream.read() != -1) {
         }
         checkedinputstream.close();
-        return Long.toHexString(crc32.getValue());
+        return Long.toString(crc32.getValue());
     }
 
     //获取crc32结果 字符串
-    public static String getByteCRC32Str(byte[] buf) throws IOException {
+    public static String getByteCRC32Str(String str) throws IOException {
         CRC32 crc32 = new CRC32();
-        crc32.update(buf);
-        return Long.toHexString(crc32.getValue());
+        crc32.update(str.getBytes());
+//        crc32.update(buf);
+        return Long.toString(crc32.getValue());
     }
+
+//    public static String getByteCRC32Str(byte[] buf, int len) throws IOException {
+//        CRC32 crc32 = new CRC32();
+//        String ttt = "123456";
+//        crc32.update(ttt.getBytes());
+////        crc32.update(buf);
+//        return Long.toString(crc32.getValue());
+//    }
 
 }

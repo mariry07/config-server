@@ -14,12 +14,16 @@
     <result column="token_time" jdbcType="INTEGER" property="tokenTime" />
     <result column="token" jdbcType="VARCHAR" property="token" />
     <result column="open_id" jdbcType="VARCHAR" property="openId" />
+    <result column="tag_id" jdbcType="INTEGER" property="tagId" />
+    <result column="tag_name" jdbcType="VARCHAR" property="tagName" />
     <result column="df" jdbcType="INTEGER" property="df" />
+
   </resultMap>
   <sql id="Base_Column_List">
     id, user_code, user_name, password, last_login_time, create_time, update_time, vendor_id, 
-    role_id, token_time, token, open_id, df
+    role_id, token_time, token, open_id, tag_id, tag_name, df
   </sql>
+
   <select id="getById" parameterType="java.lang.Long" resultMap="BaseResultMap">
     select 
     <include refid="Base_Column_List" />
@@ -35,6 +39,14 @@
   </select>
 
   <select id="getByVendorId" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from xt_user
+    where vendor_id = #{vendorId,jdbcType=BIGINT}
+    limit 1
+  </select>
+
+  <select id="getTags" parameterType="java.lang.Long" resultMap="BaseResultMap">
     select
     <include refid="Base_Column_List" />
     from xt_user

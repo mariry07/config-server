@@ -38,4 +38,6 @@ public interface ResidentInfoMapper {
 
     Integer updateLocation(@Param("deviceCode") String deviceCode, @Param("location") Integer location);
 
+    ResidentInfo getTabs(@Param("vendorId") Long vendorId);
+
 }

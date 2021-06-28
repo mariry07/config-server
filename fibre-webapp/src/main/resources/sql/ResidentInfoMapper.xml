@@ -18,7 +18,6 @@
     <result column="role_id" jdbcType="BIGINT" property="roleId" />
     <result column="location" jdbcType="INTEGER" property="location" />
     <result column="room_num" jdbcType="INTEGER" property="roomNum" />
-
     <result column="df" jdbcType="INTEGER" property="df" />
   </resultMap>
   <sql id="Base_Column_List">
@@ -125,6 +124,16 @@
     set location = #{location}
     where code = #{deviceCode} and df = 0
   </update>
+
+
+  <select id="getTabs" resultMap="BaseResultMap">
+    select
+    from xt_resident
+    where code = #{code}
+    and df = 0
+    limit 1
+  </select>
+
 
 
   <update id="updateResident" >

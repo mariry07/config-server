@@ -27,6 +27,8 @@ public class XTConstants {
         public static final String AT_RET_ERROR = "ERROR";
         public static final String AT_HEAD = "AT+";
         public static final char AT_END = '\r';
+        public static final char AT_RET_END_1 = '\r';
+        public static final char AT_RET_END_2 = '\n';
 //        public static final String AT_END = '\r';
 
     }
@@ -45,7 +47,6 @@ public class XTConstants {
         public static final String alarmData = "ALARM_DATA";
         public static final String faultData = "FAULT_DATA";
         public static final String identifyData = "IDENTIFY_DATA";
-
 
     }
 

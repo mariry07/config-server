@@ -244,6 +244,9 @@
     <if test="status!=null">
       and status = #{status}
     </if>
+    <if test="vendorId!=null">
+      and vendor_id = #{vendorId}
+    </if>
 
   </select>
 

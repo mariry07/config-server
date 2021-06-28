@@ -4,7 +4,9 @@ import com.optical.Service.ResidentService;
 import com.optical.bean.Floor;
 import com.optical.bean.OpWebResult;
 import com.optical.bean.ResidentInfo;
+import com.optical.bean.UserInfo;
 import com.optical.mapper.ResidentInfoMapper;
+import com.optical.mapper.UserInfoMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +27,8 @@ public class ResidentServiceImpl implements ResidentService{
 
     @Autowired
     private ResidentInfoMapper residentInfoMapper;
+    @Autowired
+    private UserInfoMapper userInfoMapper;
 
 
     @Override
@@ -85,7 +89,6 @@ public class ResidentServiceImpl implements ResidentService{
         Integer start = 0;
         Map rtn = new HashMap();
         List<ResidentInfo> list = null;
-
 
         try{
 
@@ -195,6 +198,37 @@ public class ResidentServiceImpl implements ResidentService{
             if(b <= 0) {
                 op.setResult(OpWebResult.OP_FAILED);
                 op.setMsg(OpWebResult.OpMsg.OP_FAIL);
+            }
+
+        }catch (Exception e) {
+            log.error("removeResident Error! e = {}", e);
+            op.setResult(OpWebResult.OP_FAILED);
+            op.setMsg(OpWebResult.OpMsg.OP_FAIL);
+            return op;
+        }
+
+        return op;
+    }
+
+    @Override
+    public OpWebResult getTabs(Long vendorId) {
+        OpWebResult op = new OpWebResult(OpWebResult.OP_SUCCESS, OpWebResult.OpMsg.OP_SUCCESS);
+        List rtnList = new ArrayList();
+        Map rtnMap = new HashMap();
+        if(vendorId == null ){
+            return op;
+        }
+        try{
+
+            UserInfo userInfo = userInfoMapper.getTags(vendorId);
+            if(userInfo == null) {
+                op.setResult(OpWebResult.OP_FAILED);
+                op.setMsg(OpWebResult.OpMsg.OP_FAIL);
+            }else{
+                rtnMap.put("tagId", userInfo.getTagId());
+                rtnMap.put("tagName", userInfo.getTagName());
+                rtnList.add(rtnMap);
+                op.setData(rtnList);
             }
 
         }catch (Exception e) {

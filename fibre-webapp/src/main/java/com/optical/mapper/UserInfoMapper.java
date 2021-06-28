@@ -1,6 +1,7 @@
 package com.optical.mapper;
 
 import com.optical.bean.UserInfo;
+import org.apache.catalina.User;
 import org.apache.ibatis.annotations.Param;
 
 /**
@@ -18,6 +19,6 @@ public interface UserInfoMapper {
 
     Integer deleteById(@Param("id") Long id);
 
-
+    UserInfo getTags(@Param("vendorId") Long vendorId);
 
 }

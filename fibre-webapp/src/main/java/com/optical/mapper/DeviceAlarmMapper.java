@@ -31,8 +31,8 @@ public interface DeviceAlarmMapper {
 
     Integer updateDescription(@Param("id") Integer id, @Param("description") String description);
 
-    Integer getUnhandledAlarmCount();
+    Integer getUnhandledAlarmCount(@Param("vendorId")Long vendorId);
 
-    Integer getAlarmCountSinceToday(@Param("startTime") Date today);
+    Integer getAlarmCountSinceToday(@Param("startTime") Date today, @Param("vendorId") Long vendorId);
 
 }

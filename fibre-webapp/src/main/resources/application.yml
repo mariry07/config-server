@@ -14,6 +14,9 @@ spring:
     url: jdbc:mysql://47.105.53.60:3306/xt_config_server?characterEncoding=UTF-8
     username: xt
     password: Ss!@#123
+#    url: jdbc:mysql://rm-bp1lyq525r23mq5bu3o.mysql.rds.aliyuncs.com/xt_config_server?characterEncoding=UTF-8
+#    username: xt
+#    password: Ss!@#123
 
 mybatis:
   #mapper-locations: classpath*:sql/*Mapper.xml

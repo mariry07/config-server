@@ -62,7 +62,7 @@ public interface TerminalAssignMapper {
      * 获取设备总数 union 在线设备数
      * @return
      */
-    public Integer getDeviceCount(@Param("status") Integer status);
+    public Integer getDeviceCount(@Param("status") Integer status, @Param("vendorId") Long vendorId);
 
 
 }
